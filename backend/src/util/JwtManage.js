@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-
+const JWT_SECRET = "This is a secret key";
 const generateToken = function (userExists) {
   return jwt.sign(
     {
@@ -7,7 +7,7 @@ const generateToken = function (userExists) {
       _id: userExists.id,
       email: userExists.email
     },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     {
       //expiresIn: '60', // 1 minutes
       expiresIn: "10 days"

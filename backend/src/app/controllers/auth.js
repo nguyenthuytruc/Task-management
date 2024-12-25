@@ -3,13 +3,9 @@ import userServices from "../services/userServices.js";
 import Result from "../common/Result.js";
 
 const login = async (req, res) => {
-  const err = validationResult(req);
-  if (!err.isEmpty()) {
-    res.status(400).json({
-      message: `Has error`
-    });
-  }
   const { email, password } = req.body;
+
+  console.log(email, password);
 
   const userExists = await userServices.login({ email, password });
 

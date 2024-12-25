@@ -1,5 +1,7 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
-import 'package:frontend/models/api_userService.dart';
+import 'package:frontend/models/api_authService.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -7,23 +9,51 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final ApiUserService _userService = ApiUserService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  String _errorMessage = '';
+  bool _isLoading = false; // Trạng thái loading
+  String _errorMessage = ""; // Thông báo lỗi
 
+  // Hàm đăng nhập
   void _login() async {
-    try {
-      final email = _emailController.text;
-      final password = _passwordController.text;
-      final response = await _userService.login(email, password);
-      if (response['token'] != null) {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
+    setState(() {
+      _isLoading = true; // Đặt trạng thái đang tải
+      _errorMessage = ""; // Reset thông báo lỗi
+    });
+
+    String email = _emailController.text;
+    String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
       setState(() {
-        _errorMessage = 'Login failed: $e';
+        _isLoading = false; // Đặt lại trạng thái khi kiểm tra không hợp lệ
+        _errorMessage = "Please enter both email and password.";
+      });
+      return;
+    }
+
+    var response = await AuthService.login(email, password);
+
+    setState(() {
+      _isLoading = false; // Đặt lại trạng thái sau khi có kết quả từ API
+    });
+
+    if (response['isSuccess']) {
+      print("Dang nhap thanh cong");
+      String idUser = response['data']['user']['userExists']['_id'];
+      String token = response['data']['user']['token'];
+      print(token);
+      Navigator.pushReplacementNamed(
+        context,
+        '/board',
+        arguments: idUser, // Truyền idUser vào BoardScreen
+      );
+    } else {
+      print("Dang nhap that bai");
+      setState(() {
+        _errorMessage =
+            response['message'] ?? "Login failed. Please try again.";
       });
     }
   }
@@ -31,30 +61,43 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Login')),
+      appBar: AppBar(title: Text("Login")),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.only(left: 2),
         child: Column(
-          children: <Widget>[
+          mainAxisAlignment:
+              MainAxisAlignment.start, // Căn chỉnh phần tử từ trên cùng
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(
+                labelText: "Email",
+                errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+              ),
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
+              decoration: InputDecoration(
+                labelText: "Password",
+                errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+              ),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login,
-              child: Text('Login'),
-            ),
-            if (_errorMessage.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(top: 16),
-                child: Text(_errorMessage, style: TextStyle(color: Colors.red)),
-              )
+            _isLoading
+                ? CircularProgressIndicator() // Khi đang tải, hiển thị loading
+                : ElevatedButton(
+                    onPressed: _login,
+                    child: Text("Login"),
+                  ),
+            if (_errorMessage.isNotEmpty) ...[
+              SizedBox(height: 10),
+              Text(
+                _errorMessage,
+                style: TextStyle(color: Colors.red),
+              ),
+            ],
           ],
         ),
       ),

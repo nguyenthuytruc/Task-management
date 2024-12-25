@@ -28,13 +28,12 @@ const getAll = async function () {
 
 const login = async function ({ email, password }) {
   try {
-    console.log(password);
     const userExists = await User.findOne({
       email
     });
 
     const isMatched = await bycrypt.compare(password, userExists.password);
-    console.log("isMatched: ", typeof isMatched);
+    console.log("isMatched: ", isMatched);
 
     if (isMatched) {
       console.log("Success");
