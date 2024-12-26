@@ -14,28 +14,13 @@ const login = async (req, res) => {
       .status(200)
       .json(new Result({ user: userExists }, "Login success", true));
   } else {
-    res.status(400).json(new Result(null, "Login failed", false));
+    res
+      .status(400)
+      .json(
+        new Result(null, "Sai mật khẩu hoặc email, Vui lòng nhập lại!", false)
+      );
   }
 };
-// mới sửa chỗ này để hiện thị lỗi khi đăng nhập sai mật khẩu và email
-// const login = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   console.log(email, password);
-
-//   const userExists = await userServices.login({ email, password });
-
-//   if (userExists) {
-//     res
-//       .status(200)
-//       .json(new Result({ user: userExists }, "Login success", true));
-//   } else {
-//     res
-//       .status(400)
-//       .json(new Result(null, "Incorrect email or password", false)); // Thông báo chi tiết hơn
-//   }
-// };
-
 const register = async (req, res) => {
   const err = validationResult(req);
   if (!err.isEmpty()) {

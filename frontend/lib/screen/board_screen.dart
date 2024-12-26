@@ -108,8 +108,7 @@ class _BoardScreenState extends State<BoardScreen> {
                   if (response.containsKey('data')) {
                     var newBoard = response['data'];
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            'Board "${newBoard['name']}" đã được tạo thành công.')));
+                        content: Text('Đã tạo board mới thành công.')));
                     Navigator.pop(context); // Đóng dialog
                     // Thực hiện load lại danh sách boards hoặc chuyển hướng đến board mới
                     setState(() {
@@ -171,39 +170,45 @@ class _BoardScreenState extends State<BoardScreen> {
     }
   }
 
+//cái này thêm rồi
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(actions: [
+      appBar: AppBar(
+        actions: [
           IconButton(
             onPressed: logout, // Nút đăng xuất
             icon: Icon(Icons.logout), // Biểu tượng logout
           ),
-        ], title: Text("Các Board Của Bạn")), // Tiêu đề màn hình
-        body: FutureBuilder<List<dynamic>>(
-          future: _boards, // Sử dụng Future để lấy boards
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              // Khi dữ liệu đang được tải
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              // Khi có lỗi khi lấy dữ liệu
-              return Center(child: Text("Lỗi: ${snapshot.error}"));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              // Nếu không có board nào
-              return Center(child: Text("Bạn không có board nào."));
-            } else {
-              // Nếu dữ liệu đã được lấy thành công
-              var boards = snapshot.data!;
-              return ListView.builder(
-                itemCount: boards.length,
-                itemBuilder: (context, index) {
-                  var board = boards[index];
+        ],
+        title: Text("Các Board Của Bạn"),
+        backgroundColor: Colors.blue, // Tiêu đề màn hình
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: _boards, // Sử dụng Future để lấy boards
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // Khi dữ liệu đang được tải
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            // Khi có lỗi khi lấy dữ liệu
+            return Center(child: Text("Lỗi: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            // Nếu không có board nào
+            return Center(child: Text("Bạn không có board nào."));
+          } else {
+            // Nếu dữ liệu đã được lấy thành công
+            var boards = snapshot.data!;
+            return SingleChildScrollView(
+              child: Column(
+                children: boards.map((board) {
                   return Card(
                     margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
                     child: ListTile(
-                      title: Text(board['name'],
-                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      title: Text(
+                        board['name'],
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       subtitle: Text(board['description']),
                       trailing: Icon(
                         board['status'] ? Icons.check_circle : Icons.cancel,
@@ -214,14 +219,16 @@ class _BoardScreenState extends State<BoardScreen> {
                       },
                     ),
                   );
-                },
-              );
-            }
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _addBoard,
-          child: const Icon(Icons.add),
-        ));
+                }).toList(),
+              ),
+            );
+          }
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addBoard,
+        child: const Icon(Icons.add),
+      ),
+    );
   }
 }
