@@ -59,10 +59,10 @@ const getById = async function (req, res) {
   }
 };
 
-const create = function (req, res) {
+const create = async function (req, res) {
   console.log(req.body);
 
-  const newlist = listServices.create(req.body);
+  const newlist = await listServices.create(req.body);
 
   if (newlist != null) {
     res.status(200).json({

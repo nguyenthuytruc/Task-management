@@ -2,7 +2,7 @@ class Board {
   String id; // ID của Board
   String name; // Tên Board
   String? description; // Mô tả (có thể null)
-  bool status; // Trạng thái (true/false)
+  bool status = false; // Trạng thái (true/false)
   DateTime createdAt; // Ngày tạo
   DateTime updatedAt; // Ngày cập nhật
   String owner; // ID của người tạo Board

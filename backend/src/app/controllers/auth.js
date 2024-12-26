@@ -9,15 +9,18 @@ const login = async (req, res) => {
 
   const userExists = await userServices.login({ email, password });
 
-  if (userExists) {
+  if (userExists != null) {
     res
       .status(200)
       .json(new Result({ user: userExists }, "Login success", true));
   } else {
-    res.status(400).json(new Result(null, "Login failed", false));
+    res
+      .status(400)
+      .json(
+        new Result(null, "Sai mật khẩu hoặc email, Vui lòng nhập lại!", false)
+      );
   }
 };
-
 const register = async (req, res) => {
   const err = validationResult(req);
   if (!err.isEmpty()) {
@@ -26,12 +29,10 @@ const register = async (req, res) => {
     });
   }
   const { email, username, password } = req.body;
-
+  console.log({ email, username, password });
   const userExists = await userServices.getByEmail(email);
   if (userExists) {
-    return res
-      .status(400)
-      .json(new Result(null, "This email has already used.", false));
+    return res.status(400).json(new Result(null, "Mail đã tồn tại!", false));
   }
   const register = await userServices.register({
     email,

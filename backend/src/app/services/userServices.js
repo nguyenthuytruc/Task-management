@@ -11,7 +11,7 @@ const getByEmail = async function (email) {
     email
   });
 
-  return userExists ? new UserDTO(userExists) : null;
+  return userExists ?? null;
 };
 
 const getById = async function (id) {
@@ -31,6 +31,12 @@ const login = async function ({ email, password }) {
     const userExists = await User.findOne({
       email
     });
+
+    console.log(userExists);
+
+    if (userExists == null) {
+      return null;
+    }
 
     const isMatched = await bycrypt.compare(password, userExists.password);
     console.log("isMatched: ", isMatched);

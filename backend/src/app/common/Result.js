@@ -1,7 +1,7 @@
 export default class Result {
-  constructor(data, meesage, isSuccess) {
+  constructor(data, message, isSuccess) {
     this.data = data;
-    this.meesage = meesage;
+    this.message = message;
     this.isSuccess = isSuccess;
   }
 }

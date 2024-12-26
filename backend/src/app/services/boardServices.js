@@ -3,6 +3,7 @@ import User from "../entity/User.js";
 
 const getById = async function (id) {
   try {
+    console.log(id);
     const existsBoard = await Board.findOne({ _id: id });
     return existsBoard;
   } catch (exception) {
@@ -14,7 +15,7 @@ const getById = async function (id) {
 
 const getAllByIdUser = async function (idUser) {
   try {
-    // const ownerId = mongoose.Types.ObjectId(idUser);
+    console.log(idUser);
     const listBoard = await Board.find({
       owner: idUser
     });
@@ -36,15 +37,6 @@ const getCoopBoardByIdUser = async function (idUser) {
     return listBoard;
   } catch (exception) {
     console.log("Error get all by idUSer", exception.message);
-    return null;
-  }
-};
-
-const getAll = async function () {
-  try {
-    const listBoard = await Board.find({});
-    return listBoard;
-  } catch (exception) {
     return null;
   }
 };
@@ -139,7 +131,6 @@ const deleteById = async function (id) {
 };
 
 export default {
-  getAll,
   getById,
   getAllByIdUser,
   getCoopBoardByIdUser,
