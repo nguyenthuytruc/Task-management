@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert'; // Để parse JSON
 import 'package:http/http.dart' as http;
 
@@ -108,12 +110,12 @@ class ApiUserService {
       Map<String, dynamic> boardData) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/boards'),
+        Uri.parse('$baseUrl/api/board'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(boardData),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 201 || response.statusCode == 200) {
         return jsonDecode(response.body); // Trả về thông tin Board vừa tạo
       } else {
         throw Exception('Failed to create board: ${response.statusCode}');
