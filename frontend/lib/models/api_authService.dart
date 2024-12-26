@@ -27,23 +27,61 @@ class AuthService {
         // Truy cập vào các trường trong JSON
         final data = result['data']; // Dữ liệu trả về
         final isSuccess = result['isSuccess']; // Trạng thái thành công
-        final message = result['message']; // Thông báo từ backend
 
         if (isSuccess) {
           print("Đăng nhập thành công: $data");
           return result; // Trả về dữ liệu nếu cần
         } else {
-          print("Đăng nhập thất bại: $message");
-          throw Exception(message); // Ném lỗi với thông báo
+          print(result);
+          return result; // Ném lỗi với thông báo
         }
       } else {
-        return {
-          "success": false,
-          "message": "Error: ${response.statusCode} - ${response.body}"
-        };
+        final result = jsonDecode(response.body);
+        return {"isSuccess": false, "message": result['message']};
       }
     } catch (e) {
-      return {"success": false, "message": "An error occurred: $e"};
+      return {"isSuccess": false, "message": "An error occurred: $e"};
+    }
+  }
+
+  // Function for login
+  static Future<Map<String, dynamic>> register(
+      String email, String username, String password) async {
+    final String apiUrl = "$baseUrl/api/auth/register";
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "email": email.trim(),
+          "username": username.trim(),
+          "password": password.trim(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body); // Chuyển JSON thành Map
+        print(result);
+
+        // Truy cập vào các trường trong JSON
+        final data = result['data']; // Dữ liệu trả về
+        final isSuccess = result['isSuccess']; // Trạng thái thành công
+        final message = result['message'];
+        if (isSuccess) {
+          print("Đăng ký thành công: $data");
+          return result; // Trả về dữ liệu nếu cần
+        } else {
+          print(result);
+          return result; // Ném lỗi với thông báo
+        }
+      } else {
+        final result = jsonDecode(response.body);
+        final message = result['message'];
+        return {"isSuccess": false, "message": message};
+      }
+    } catch (e) {
+      return {"isSuccess": false, "message": "An error occurred: $e"};
     }
   }
 }
