@@ -49,7 +49,6 @@ class ApiListService {
     }
   }
 
-  // Tạo mới List
   Future<Map<String, dynamic>> createList(Map<String, dynamic> listData) async {
     try {
       final response = await http.post(
@@ -58,7 +57,7 @@ class ApiListService {
         body: jsonEncode(listData),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode < 300) {
         return jsonDecode(response.body); // Trả về thông tin List vừa tạo
       } else {
         return Future.error('Failed to create list: ${response.statusCode}');

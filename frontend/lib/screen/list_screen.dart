@@ -142,9 +142,7 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
-  // Thêm danh sách mới thông qua API
-  // Phương thức tạo danh sách mới
-  Future<void> _addNewList(String name, String description) async {
+ Future<void> _addNewList(String name, String description) async {
   try {
     final listData = {
       'name': name,
@@ -159,9 +157,9 @@ class _ListScreenState extends State<ListScreen> {
     print('API response: $newList');
 
     // Kiểm tra nếu có dữ liệu hợp lệ từ API
-    if (newList != null && newList['name'] != null) {
+    if (newList != null && newList['data'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tạo danh sách mới thành công: ${newList['name']}')),
+        SnackBar(content: Text('Tạo danh sách mới thành công!')),
       );
     } else {
       // Nếu không có dữ liệu hợp lệ từ API, hiển thị thông báo lỗi
@@ -177,5 +175,4 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 }
-
 }
