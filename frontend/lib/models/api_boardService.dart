@@ -97,7 +97,7 @@ class ApiUserService {
   Future<bool> deleteBoard(String boardId) async {
     try {
       final response =
-          await http.delete(Uri.parse('$baseUrl/boards/delete/$boardId'));
+          await http.delete(Uri.parse('$baseUrl/api/board/delete/$boardId'));
 
       return response.statusCode == 200;
     } catch (e) {
