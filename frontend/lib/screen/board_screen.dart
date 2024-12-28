@@ -11,8 +11,8 @@ class BoardScreen extends StatefulWidget {
 
 class _BoardScreenState extends State<BoardScreen> {
   // @override
-  final ApiUserService _apiUserService =
-      ApiUserService(); // Tạo đối tượng ApiUserService
+  final ApiBoardService _apiUserService =
+      ApiBoardService(); // Tạo đối tượng ApiboardService
   late Future<List<dynamic>> _boards; // Future để chứa danh sách các board
   String? _idUser;
 
@@ -208,12 +208,12 @@ class _BoardScreenState extends State<BoardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: logout, // Nút đăng xuất
-            icon: Icon(Icons.logout), // Biểu tượng logout
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: logout, // Nút đăng xuất
+        //     icon: Icon(Icons.logout), // Biểu tượng logout
+        //   ),
+        //],
         title: Align(
           alignment: Alignment.center, // Căn giữa
           child: Text(
@@ -262,6 +262,11 @@ class _BoardScreenState extends State<BoardScreen> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        IconButton(
+                            icon: Icon(Icons.note, color: Colors.blue),
+                            onPressed: () {
+                              // bỏ cái screen note theo boarid vô chỗ này
+                            }),
                         IconButton(
                           icon: Icon(Icons.delete, color: Colors.red),
                           onPressed: () {

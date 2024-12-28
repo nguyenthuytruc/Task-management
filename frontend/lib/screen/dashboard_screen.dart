@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screen/board_screen.dart';
 import 'package:frontend/screen/login_screen.dart';
+import 'package:frontend/screen/note_screen.dart';
 import 'package:frontend/screen/user_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,9 +17,12 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   @override
   int _selectedIndex = 0;
+
   // Danh sách các màn hình
   final List<Widget> _widgetOptions = <Widget>[
     BoardScreen(),
+    // NoteScreen(boardId: "0"),
+    UserScreen(),
     //UserScreen(),
   ];
   Future<void> logout() async {
@@ -58,10 +62,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.home),
             label: 'Board',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.note),
-            label: 'Note',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.note),
+          //   label: 'Note',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'User',

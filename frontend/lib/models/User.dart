@@ -1,50 +1,45 @@
 class User {
-  String username;
-  String password;
-  String email;
-  String? phone; // Để phone có thể nhận giá trị null
-  String? avatar; // Để avatar có thể nhận giá trị null
+  final String id;
+  final String username;
+  final String email;
+  final String avatar;
+  final String phone;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   User({
+    required this.id,
     required this.username,
-    required this.password,
     required this.email,
-    this.phone,
-    this.avatar,
+    required this.avatar,
+    required this.phone,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
-  // Chuyển đổi từ JSON
+  // Factory constructor to create a User from a JSON map
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
+      id: json['_id'],
       username: json['username'],
-      password: json['password'],
       email: json['email'],
-      phone: json['phone'], // Nếu không có sẽ là null
-      avatar: json['avatar'], // Nếu không có sẽ là null
+      avatar: json['avatar'],
+      phone: json['phone'] ?? '',
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
     );
   }
 
-  // Chuyển đối tượng User thành JSON
+  // Method to convert the User object to a map (for sending in requests)
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'username': username,
-      'password': password,
       'email': email,
-      'phone': phone ?? "", // Nếu phone là null, sẽ chuyển thành chuỗi rỗng
-      'avatar': avatar ?? "", // Nếu avatar là null, sẽ chuyển thành chuỗi rỗng
+      'avatar': avatar,
+      'phone': phone,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
-  }
-}
-
-class LoginResponse {
-  String token;
-
-  LoginResponse({required this.token});
-
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    if (json['token'] == null) {
-      throw Exception('Token not found in response');
-    }
-    return LoginResponse(token: json['token']);
   }
 }
