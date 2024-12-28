@@ -24,8 +24,7 @@ class _ListScreenState extends State<ListScreen> {
     super.didChangeDependencies();
     // Gọi API để lấy danh sách các List của Board khi màn hình được load
     _getUserId();
-    _lists =
-        _apiListService.getAllLists(widget.boardId); // Truyền boardId vào API
+    _lists = _apiListService.getAllLists(widget.boardId); // Truyền boardId vào API
   }
 
   Future<void> _getUserId() async {
@@ -159,6 +158,13 @@ class _ListScreenState extends State<ListScreen> {
                                     }
                                   },
                                 ),
+                                // Nút thêm task
+                                IconButton(
+                                  icon: Icon(Icons.add),
+                                  onPressed: () {
+                                    _showAddTaskDialog(list['_id']);
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -173,6 +179,100 @@ class _ListScreenState extends State<ListScreen> {
         ],
       ),
     );
+  }
+
+  // Hiển thị hộp thoại thêm task
+  void _showAddTaskDialog(String listId) {
+    String taskName = "";
+    String taskDescription = "";
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Thêm task mới"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "Tên task",
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  taskName = value;
+                },
+              ),
+              SizedBox(height: 10),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: "Mô tả (không bắt buộc)",
+                  border: OutlineInputBorder(),
+                ),
+                onChanged: (value) {
+                  taskDescription = value;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Đóng hộp thoại
+              },
+              child: Text("Hủy"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (taskName.isNotEmpty) {
+                  await _addTaskToList(listId, taskName, taskDescription);
+                  Navigator.pop(context); // Đóng hộp thoại
+                  setState(() {
+                    _lists = _apiListService
+                        .getAllLists(widget.boardId); // Làm mới danh sách
+                  });
+                }
+              },
+              child: Text("Thêm"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _addTaskToList(String listId, String name, String description) async {
+    try {
+      final taskData = {
+        'name': name,
+        'description': description,
+        'listId': listId,
+        'createdBy': _userId, // Sử dụng idUser khi tạo task
+      };
+
+      final newTask = await _apiTaskService.createTask(taskData);
+
+      // In phản hồi từ API để kiểm tra
+      print('API response: $newTask');
+
+      // Kiểm tra nếu có dữ liệu hợp lệ từ API
+      if (newTask != null && newTask['data'] != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tạo task mới thành công!')),
+        );
+      } else {
+        // Nếu không có dữ liệu hợp lệ từ API, hiển thị thông báo lỗi
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Thêm task thất bại: Không có dữ liệu trả về')),
+        );
+      }
+    } catch (e) {
+      // In ra chi tiết lỗi để debug
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Thêm task thất bại: $e')),
+      );
+    }
   }
 
   // Hiển thị hộp thoại thêm danh sách mới
