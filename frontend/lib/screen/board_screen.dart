@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/api_boardService.dart';
 import 'package:frontend/screen/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/screen/list_screen.dart';
 
 class BoardScreen extends StatefulWidget {
   @override
@@ -215,7 +216,13 @@ class _BoardScreenState extends State<BoardScreen> {
                         color: board['status'] ? Colors.green : Colors.red,
                       ),
                       onTap: () {
-                        // Xử lý khi nhấn vào một board, có thể thêm hành động ở đây nếu cần
+                        print('Navigating to ListScreen with boardId: ${board['_id']}');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListScreen(boardId: board['_id']),
+                          ),
+                        );
                       },
                     ),
                   );

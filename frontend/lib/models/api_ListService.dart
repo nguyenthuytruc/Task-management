@@ -68,28 +68,30 @@ class ApiListService {
   }
 
   // Cập nhật List
-  Future<bool> updateList(String listId, Map<String, dynamic> data) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/api/list/$listId'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
+Future<Map<String, dynamic>> updateList(String id, Map<String, dynamic> data) async {
+  final response = await http.put(
+    Uri.parse('$baseUrl/api/list/$id'),
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode(data),
+  );
+  return jsonDecode(response.body);
+}
 
-      return response.statusCode == 200;
-    } catch (e) {
-      return Future.error('Failed to update list: $e');
-    }
-  }
+  
 
   // Xóa List
-  Future<bool> deleteList(String listId) async {
-    try {
-      final response = await http.delete(Uri.parse('$baseUrl/api/list/delete/$listId'));
-
-      return response.statusCode == 200;
-    } catch (e) {
-      return Future.error('Failed to delete list: $e');
+  Future<bool> deleteList(String id) async {
+  try {
+    final response = await http.delete(Uri.parse('$baseUrl/api/list/delete/$id'));
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      return false;
     }
+  } catch (e) {
+    print('Error: $e');
+    return false;
   }
+}
+
 }

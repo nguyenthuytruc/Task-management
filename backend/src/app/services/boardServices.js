@@ -129,6 +129,17 @@ const deleteById = async function (id) {
     return false;
   }
 };
+const getAll = async function () {
+  try {
+    // Truy vấn tất cả các board từ cơ sở dữ liệu
+    const listBoard = await Board.find({});
+    return listBoard;
+  } catch (exception) {
+    console.log("Error get all boards:", exception.message);
+    return null;
+  }
+};
+
 
 export default {
   getById,
@@ -138,5 +149,6 @@ export default {
   removeMembers,
   create,
   updateById,
-  deleteById
+  deleteById,
+  getAll
 };

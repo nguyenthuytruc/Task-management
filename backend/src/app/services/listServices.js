@@ -34,14 +34,14 @@ const getAll = async function () {
 };
 
 // Tạo List trong database
-const create = function ({ name, description, color, userId, boardId }) {
+const create = function ({ name, description, color, createdBy, boardId }) {
   try {
     const newList = new List({
       name,
       description,
       color,
 
-      createdBy: userId,
+      createdBy,
       boardId
     });
     newList.save();
