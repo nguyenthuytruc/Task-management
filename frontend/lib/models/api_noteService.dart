@@ -7,35 +7,36 @@ class ApiNoteService {
 
   // Lấy danh sách ghi chú theo boardId
   Future<List<Note>> getNotesByBoardId(String boardId) async {
-    final response = await http.get(Uri.parse('$baseUrl/api/notes/b/$boardId'));
+  final response = await http.get(Uri.parse('$baseUrl/api/notes/b/$boardId'));
 
-    if (response.statusCode == 200) {
-      final List<dynamic> noteList = json.decode(response.body)["data"]["list"];
-      return noteList.map((note) => Note.fromJson(note)).toList();
-    } else {
-      throw Exception("Không thể tải ghi chú cho board này");
-    }
+  if (response.statusCode == 200) {
+    final List<dynamic> noteList = json.decode(response.body)["data"]["list"];
+    return noteList.map((note) {
+      return Note.fromJson(note ?? {}); // Nếu note là null, trả về đối tượng rỗng
+    }).toList();
+  } else {
+    throw Exception("Không thể tải ghi chú cho board này");
   }
+}
 
   // Tạo ghi chú mới
   Future<bool> createNote(Map<String, dynamic> noteData) async {
-    try {
-      // Gọi API và gửi noteData dưới dạng JSON
-      var response = await http.post(
-        Uri.parse('$baseUrl/api/notes'),
-        body: jsonEncode(noteData),
-        headers: {"Content-Type": "application/json"},
-      );
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        throw Exception('Tạo ghi chú thất bại');
-      }
-    } catch (e) {
-      print(e);
-      return false;
+  try {
+    var response = await http.post(
+      Uri.parse('$baseUrl/api/notes'),
+      body: jsonEncode(noteData),
+      headers: {"Content-Type": "application/json"},
+    );
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      throw Exception('Tạo ghi chú thất bại');
     }
+  } catch (e) {
+    print(e);
+    return false;
   }
+}
 
   // Cập nhật trạng thái ghi chú
   Future<bool> updateNoteStatus(String id) async {

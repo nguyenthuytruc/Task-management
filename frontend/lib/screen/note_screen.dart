@@ -48,6 +48,7 @@ class _NoteScreenState extends State<NoteScreen> {
     return prefs.getString('idUser');
   }
 
+  // Thêm ghi chú mới
   void _addNote() async {
     TextEditingController nameController = TextEditingController();
     TextEditingController descriptionController = TextEditingController();
@@ -144,6 +145,7 @@ class _NoteScreenState extends State<NoteScreen> {
     );
   }
 
+  // Xóa ghi chú
   void _deleteNote(String noteId) async {
     try {
       bool isDeleted = await _apiNoteService.deleteNoteById(noteId);
@@ -166,6 +168,94 @@ class _NoteScreenState extends State<NoteScreen> {
         SnackBar(content: Text('Lỗi khi xóa ghi chú: $e')),
       );
     }
+  }
+
+  // Chỉnh sửa ghi chú
+  void _editNote(Note note) async {
+    TextEditingController nameController = TextEditingController(text: note.name);
+    TextEditingController descriptionController = TextEditingController(text: note.description);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Chỉnh Sửa Ghi Chú"),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(labelText: "Tên ghi chú"),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(labelText: "Mô tả"),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Đóng dialog
+              },
+              child: Text("Hủy"),
+            ),
+            TextButton(
+              onPressed: () async {
+                String noteName = nameController.text;
+                String noteDescription = descriptionController.text;
+
+                if (noteName.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Tên ghi chú không thể trống."),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                  return;
+                }
+
+                // Tạo đối tượng Note mới với dữ liệu đã chỉnh sửa
+                Note updatedNote = Note(
+                  id: note.id, // Giữ nguyên id cũ để cập nhật
+                  name: noteName,
+                  description: noteDescription,
+                  type: note.type,
+                  isPinned: note.isPinned,
+                  createdAt: note.createdAt,
+                  updatedAt: DateTime.now(), // Cập nhật thời gian sửa đổi
+                  createdBy: note.createdBy,
+                  boardId: note.boardId,
+                );
+
+                try {
+                  // Cập nhật ghi chú trên server
+                  bool isUpdated = await _apiNoteService.updateNote(updatedNote);
+                  if (isUpdated) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Đã cập nhật ghi chú thành công.'),
+                      backgroundColor: Colors.blueAccent,
+                    ));
+                    Navigator.pop(context);
+                    setState(() {
+                      _notes = _apiNoteService.getNotesByBoardId(widget.boardId);
+                    });
+                  } else {
+                    throw Exception('Cập nhật ghi chú thất bại');
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Lỗi: ${e.toString()}')),
+                  );
+                }
+              },
+              child: Text("Lưu Thay Đổi"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -199,32 +289,43 @@ class _NoteScreenState extends State<NoteScreen> {
                 return ListTile(
                   title: Text(note.name),
                   subtitle: Text(note.description ?? 'Không có mô tả'),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text("Xác nhận xóa"),
-                            content: Text("Bạn có chắc chắn muốn xóa ghi chú này không?"),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text("Hủy"),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _deleteNote(note.id);
-                                },
-                                child: Text("Xóa"),
-                              ),
-                            ],
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          _editNote(note);
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: Text("Xác nhận xóa"),
+                                content: Text("Bạn có chắc chắn muốn xóa ghi chú này không?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text("Hủy"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      _deleteNote(note.id!);
+                                    },
+                                    child: Text("Xóa"),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 );
               },
@@ -234,7 +335,8 @@ class _NoteScreenState extends State<NoteScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addNote,
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
       ),
     );
   }

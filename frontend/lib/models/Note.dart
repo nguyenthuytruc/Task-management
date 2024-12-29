@@ -1,5 +1,5 @@
 class Note {
-  String id; // Đổi id thành nullable
+  String? id; // id là nullable
   String name;
   String? description;
   String type;
@@ -10,7 +10,7 @@ class Note {
   String boardId;
 
   Note({
-    required this.id, // id là tham số tùy chọn
+    this.id, // id có thể nullable
     required this.name,
     this.description,
     this.type = "Normal",
@@ -24,30 +24,30 @@ class Note {
   // Phương thức factory để tạo một Note từ JSON
   factory Note.fromJson(Map<String, dynamic> json) {
     return Note(
-      id: json['_id'],
-      name: json['name'],
-      description: json['description'],
-      type: json['type'] ?? "Normal",
-      isPinned: json['isPinned'] ?? false,
-      createdAt: DateTime.parse(json['createdAt']),
-      updatedAt: DateTime.parse(json['updatedAt']),
-      createdBy: json['createdBy'],
-      boardId: json['boardId'],
+      id: json['_id'] ?? '', // Đảm bảo id không null
+      name: json['name'] ?? '', // Đảm bảo name không null
+      description: json['description'] ?? '', // Đảm bảo description không null
+      type: json['type'] ?? "Normal", // Giá trị mặc định nếu type null
+      isPinned: json['isPinned'] ?? false, // Giá trị mặc định nếu isPinned null
+      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toString()), // Giá trị mặc định nếu createdAt null
+      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toString()), // Giá trị mặc định nếu updatedAt null
+      createdBy: json['createdBy'] ?? '', // Đảm bảo createdBy không null
+      boardId: json['boardId'] ?? '', // Đảm bảo boardId không null
     );
   }
 
   // Phương thức để chuyển một Note thành JSON
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
-      'name': name,
-      'description': description,
-      'type': type,
+      '_id': id ?? '', // Tránh giá trị null cho id
+      'name': name.isEmpty ? '' : name, // Tránh giá trị null cho name
+      'description': description ?? '', // Nếu description null, trả về chuỗi rỗng
+      'type': type ?? 'Normal', // Nếu type null, trả về giá trị mặc định "Normal"
       'isPinned': isPinned,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'createdBy': createdBy,
-      'boardId': boardId,
+      'createdBy': createdBy.isEmpty ? '' : createdBy, // Tránh giá trị null cho createdBy
+      'boardId': boardId.isEmpty ? '' : boardId, // Tránh giá trị null cho boardId
     };
   }
 }
