@@ -34,17 +34,22 @@ const getAll = async function () {
 };
 
 // Tạo List trong database
-const create = function ({ name, description, color, userId, boardId }) {
+const create = async function ({
+  name,
+  description,
+  color,
+  createdBy,
+  boardId
+}) {
   try {
     const newList = new List({
       name,
       description,
       color,
-
-      createdBy: userId,
+      createdBy,
       boardId
     });
-    newList.save();
+    await newList.save();
     return newList;
   } catch (exception) {
     return null;

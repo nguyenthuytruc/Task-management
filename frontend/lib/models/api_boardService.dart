@@ -3,7 +3,7 @@
 import 'dart:convert'; // Để parse JSON
 import 'package:http/http.dart' as http;
 
-class ApiUserService {
+class ApiBoardService {
   final String baseUrl = 'http://10.0.2.2:3000';
 
   // Lấy danh sách tất cả Boards
