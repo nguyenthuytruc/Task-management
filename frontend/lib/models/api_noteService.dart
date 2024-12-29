@@ -1,77 +1,64 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'Note.dart';
+import 'package:frontend/models/Note.dart';
 
 class ApiNoteService {
-  final String baseUrl = 'http://10.0.2.2:3000';
+  final String baseUrl = "http://10.0.2.2:3000";
 
-  // Lấy tất cả ghi chú
-  Future<List<Note>> getAllNotes() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/api/notes'));
+  // Lấy danh sách ghi chú theo boardId
+  Future<List<Note>> getNotesByBoardId(String boardId) async {
+    final response = await http.get(Uri.parse('$baseUrl/api/notes/b/$boardId'));
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
-        if (json.containsKey('data')) {
-          List<dynamic> list = json['data']['list'] as List<dynamic>;
-          if (list.isEmpty) {
-            return [];
-          } else {
-            return list.map((note) => Note.fromJson(note)).toList();
-          }
-        } else {
-          throw Exception('Key "list" not found in response.');
-        }
-      } else {
-        throw Exception('Failed to load notes: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Error: $e');
+    if (response.statusCode == 200) {
+      final List<dynamic> noteList = json.decode(response.body)["data"]["list"];
+      return noteList.map((note) => Note.fromJson(note)).toList();
+    } else {
+      throw Exception("Không thể tải ghi chú cho board này");
     }
   }
 
-  // Thêm ghi chú mới
-  Future<Note> createNote(Note note) async {
+  // Tạo ghi chú mới
+  Future<bool> createNote(Map<String, dynamic> noteData) async {
     try {
-      final response = await http.post(
+      // Gọi API và gửi noteData dưới dạng JSON
+      var response = await http.post(
         Uri.parse('$baseUrl/api/notes'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(note.toJson()),
+        body: jsonEncode(noteData),
+        headers: {"Content-Type": "application/json"},
       );
-
       if (response.statusCode == 200) {
-        final Map<String, dynamic> json = jsonDecode(response.body);
-        return Note.fromJson(json['data']);
+        return true;
       } else {
-        throw Exception('Failed to create note: ${response.statusCode}');
+        throw Exception('Tạo ghi chú thất bại');
       }
     } catch (e) {
-      throw Exception('Error: $e');
+      print(e);
+      return false;
     }
   }
 
-  // Cập nhật trạng thái ghim của ghi chú
-  Future<bool> updateStatus(String noteId) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/updateStatus/$noteId'),
-        headers: {'Content-Type': 'application/json'},
-      );
+  // Cập nhật trạng thái ghi chú
+  Future<bool> updateNoteStatus(String id) async {
+    final response = await http.put(Uri.parse("$baseUrl/updateStatus/$id"));
 
-      return response.statusCode == 200;
-    } catch (e) {
-      throw Exception('Failed to update note status: $e');
-    }
+    return response.statusCode == 200;
   }
 
-  // Xóa ghi chú
-  Future<bool> deleteNote(String noteId) async {
-    try {
-      final response = await http.delete(Uri.parse('$baseUrl/delete/$noteId'));
+  // Cập nhật ghi chú
+  Future<bool> updateNote(Note note) async {
+    final response = await http.put(
+      Uri.parse("$baseUrl/api/notes/${note.id}"),
+      headers: {"Content-Type": "application/json"},
+      body: json.encode(note.toJson()),
+    );
+    
+    return response.statusCode == 200;
+  }
 
-      return response.statusCode == 200;
-    } catch (e) {
-      throw Exception('Failed to delete note: $e');
-    }
+  // Xóa ghi chú theo id
+  Future<bool> deleteNoteById(String id) async {
+    final response = await http.delete(Uri.parse("$baseUrl/api/notes/delete/$id"));
+
+    return response.statusCode == 200;
   }
 }

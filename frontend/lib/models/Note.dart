@@ -1,48 +1,53 @@
 class Note {
-   String id;
-   String name;
-   String description;
-   String createdBy;
-   String board;
-  bool isPinned; // Không phải final để có thể thay đổi trạng thái
-   DateTime createdAt;
-   DateTime updatedAt;
+  String id; // Đổi id thành nullable
+  String name;
+  String? description;
+  String type;
+  bool isPinned;
+  DateTime createdAt;
+  DateTime updatedAt;
+  String createdBy;
+  String boardId;
 
   Note({
-    required this.id,
+    required this.id, // id là tham số tùy chọn
     required this.name,
-    required this.description,
-    required this.createdBy,
-    required this.board,
-    required this.isPinned,
+    this.description,
+    this.type = "Normal",
+    this.isPinned = false,
     required this.createdAt,
     required this.updatedAt,
+    required this.createdBy,
+    required this.boardId,
   });
 
-  // Chuyển đổi từ JSON
+  // Phương thức factory để tạo một Note từ JSON
   factory Note.fromJson(Map<String, dynamic> json) {
     return Note(
       id: json['_id'],
       name: json['name'],
       description: json['description'],
-      createdBy: json['createdBy'],
-      board: json['board'],
-      isPinned: json['isPinned'],
+      type: json['type'] ?? "Normal",
+      isPinned: json['isPinned'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      createdBy: json['createdBy'],
+      boardId: json['boardId'],
     );
   }
 
-  // Chuyển đổi sang JSON để gửi đi
+  // Phương thức để chuyển một Note thành JSON
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'name': name,
       'description': description,
-      'createdBy': createdBy,
-      'board': board,
+      'type': type,
       'isPinned': isPinned,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'createdBy': createdBy,
+      'boardId': boardId,
     };
   }
 }
