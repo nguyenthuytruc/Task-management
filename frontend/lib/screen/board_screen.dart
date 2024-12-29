@@ -3,7 +3,6 @@ import 'package:frontend/models/api_boardService.dart';
 import 'package:frontend/screen/list_screen.dart';
 import 'package:frontend/screen/login_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:frontend/screen/list_screen.dart';
 
 class BoardScreen extends StatefulWidget {
   @override
