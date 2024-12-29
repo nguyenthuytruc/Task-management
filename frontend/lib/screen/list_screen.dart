@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ListScreen extends StatefulWidget {
   final String boardId;
 
-  // Constructor nhận boardId
   ListScreen({required this.boardId});
 
   @override
@@ -16,28 +15,26 @@ class ListScreen extends StatefulWidget {
 class _ListScreenState extends State<ListScreen> {
   final ApiListService _apiListService = ApiListService();
   final ApiTaskService _apiTaskService = ApiTaskService();
-  late Future<List<dynamic>> _lists; // Future chứa danh sách các List của Board
-  late String _userId; // Biến để lưu idUser
+  late Future<List<dynamic>> _lists;
+  late String _userId;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Gọi API để lấy danh sách các List của Board khi màn hình được load
     _getUserId();
-    _lists = _apiListService.getAllLists(widget.boardId); // Truyền boardId vào API
+    _lists = _apiListService.getAllLists(widget.boardId);
   }
 
   Future<void> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _userId =
-          prefs.getString('idUser') ?? ''; // Lấy idUser từ SharedPreferences
+      _userId = prefs.getString('idUser') ?? '';
     });
   }
 
   Future<List<dynamic>> _getTasksForList(String listId) async {
     try {
-      return await _apiTaskService.getAllTasksByListId(listId); // Gọi API để lấy task theo listId
+      return await _apiTaskService.getAllTasksByListId(listId);
     } catch (e) {
       print('Error fetching tasks: $e');
       return [];
@@ -47,136 +44,157 @@ class _ListScreenState extends State<ListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue, // Toàn bộ nền màu xanh
+      backgroundColor: Colors.blue,
       appBar: AppBar(
         title: Text('Danh sách của bạn'),
-        backgroundColor: Colors.blueAccent, // Đổi màu thanh AppBar
+        backgroundColor: Colors.blueAccent,
       ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.6,
-            child: FutureBuilder<List<dynamic>>(
-              future: _lists,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Lỗi: ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("Không có danh sách nào."));
-                } else {
-                  var lists = snapshot.data!;
-                  return ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: lists.length,
-                    itemBuilder: (context, index) {
-                      var list = lists[index];
-                      return Container(
-                        width: 200,
-                        margin: EdgeInsets.symmetric(horizontal: 10),
-                        child: Card(
-                          color: Colors.white,
-                          elevation: 3,
-                          child: Padding(
-                            padding: EdgeInsets.all(10),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        list['name'],
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    PopupMenuButton<String>(
-                                      icon: Icon(Icons.more_horiz),
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          _showEditListDialog(list);
-                                        } else if (value == 'delete') {
-                                          _showDeleteConfirmationDialog(
-                                              list['_id']);
-                                        }
-                                      },
-                                      itemBuilder: (BuildContext context) => [
-                                        PopupMenuItem(
-                                          value: 'edit',
-                                          child: Text('Chỉnh sửa'),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Text('Xóa'),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  list['description'] ?? 'Không có mô tả',
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
+      body: FutureBuilder<List<dynamic>>(
+        future: _lists,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Lỗi: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text("Không có danh sách nào."));
+          } else {
+            var lists = snapshot.data!;
+            return ListView.builder(
+              scrollDirection: Axis.horizontal, // Cuộn ngang
+              itemCount: lists.length,
+              itemBuilder: (context, index) {
+                var list = lists[index];
+                return Container(
+                  width: MediaQuery.of(context).size.width *
+                      0.8, // Đặt chiều rộng cho mỗi item
+                  margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  child: Card(
+                    color: Colors.white,
+                    elevation: 3,
+                    child: Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  list['name'],
                                   style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
                                   ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                // Hiển thị các task dưới mỗi list
-                                FutureBuilder<List<dynamic>>(
-                                  future: _getTasksForList(list['_id']),
-                                  builder: (context, taskSnapshot) {
-                                    if (taskSnapshot.connectionState == ConnectionState.waiting) {
-                                      return CircularProgressIndicator();
-                                    } else if (taskSnapshot.hasError) {
-                                      return Text('Lỗi: ${taskSnapshot.error}');
-                                    } else if (!taskSnapshot.hasData || taskSnapshot.data!.isEmpty) {
-                                      return Text('Không có task nào.');
-                                    } else {
-                                      var tasks = taskSnapshot.data!;
-                                      return ListView.builder(
-                                        shrinkWrap: true,
-                                        physics: NeverScrollableScrollPhysics(),
-                                        itemCount: tasks.length,
-                                        itemBuilder: (context, taskIndex) {
-                                          var task = tasks[taskIndex];
-                                          return ListTile(
-                                            title: Text(task['name']),
-                                            subtitle: Text(task['description'] ?? 'Không có mô tả'),
-                                          );
-                                        },
-                                      );
-                                    }
-                                  },
-                                ),
-                                // Nút thêm task
-                                IconButton(
-                                  icon: Icon(Icons.add),
-                                  onPressed: () {
-                                    _showAddTaskDialog(list['_id']);
-                                  },
-                                ),
-                              ],
+                              ),
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_horiz),
+                                onSelected: (value) {
+                                  if (value == 'edit') {
+                                    _showEditListDialog(list);
+                                  } else if (value == 'delete') {
+                                    _showDeleteConfirmationDialog(list['_id']);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) => [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text('Chỉnh sửa'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text('Xóa'),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 5),
+                          Text(
+                            list['description'] ?? 'Không có mô tả',
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  );
-                }
+                          SizedBox(height: 10),
+                          // Hiển thị các task dưới mỗi list
+
+                          FutureBuilder<List<dynamic>>(
+                            future: _getTasksForList(list['_id']),
+                            builder: (context, taskSnapshot) {
+                              if (taskSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator();
+                              } else if (taskSnapshot.hasError) {
+                                return Text('Lỗi: ${taskSnapshot.error}');
+                              } else if (!taskSnapshot.hasData ||
+                                  taskSnapshot.data!.isEmpty) {
+                                return Text('Không có task nào.');
+                              } else {
+                                var tasks = taskSnapshot.data!;
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: Colors
+                                            .grey), // Viền khung cho task list
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxHeight:
+                                            200.0, // Giới hạn chiều cao tối đa của danh sách
+                                      ),
+                                      child: Scrollbar(
+                                        thumbVisibility:
+                                            true, // Hiển thị thanh cuộn
+                                        child: ListView.builder(
+                                          shrinkWrap: true,
+                                          physics:
+                                              BouncingScrollPhysics(), // Cảm giác mượt khi cuộn
+                                          itemCount: tasks.length,
+                                          itemBuilder: (context, taskIndex) {
+                                            var task = tasks[taskIndex];
+                                            return ListTile(
+                                              title: Text(task['name']),
+                                              subtitle: Text(
+                                                  task['description'] ??
+                                                      'Không có mô tả'),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+
+                          // Nút thêm task
+                          IconButton(
+                            icon: Icon(Icons.add),
+                            onPressed: () {
+                              _showAddTaskDialog(list['_id']);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
-            ),
-          ),
-        ],
+            );
+          }
+        },
       ),
     );
   }
@@ -241,39 +259,47 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
-  Future<void> _addTaskToList(String listId, String name, String description) async {
-    try {
-      final taskData = {
-        'name': name,
-        'description': description,
-        'listId': listId,
-        'createdBy': _userId, // Sử dụng idUser khi tạo task
-      };
+  Future<void> _addTaskToList(
+    String listId, String name, String description) async {
+  try {
+    final taskData = {
+      'name': name,
+      'description': description,
+      'listId': listId,
+      'createdBy': _userId, // Sử dụng idUser khi tạo task
+    };
 
-      final newTask = await _apiTaskService.createTask(taskData);
+    final newTask = await _apiTaskService.createTask(taskData);
 
-      // In phản hồi từ API để kiểm tra
-      print('API response: $newTask');
+    if (newTask != null && newTask['data'] != null) {
+      setState(() {
+        // Cập nhật trực tiếp danh sách task cho danh sách cụ thể
+        _lists = _lists.then((lists) {
+          return lists.map((list) {
+            if (list['_id'] == listId) {
+              if (list['tasks'] == null) list['tasks'] = [];
+              list['tasks'].add(newTask['data']);
+            }
+            return list;
+          }).toList();
+        });
+      });
 
-      // Kiểm tra nếu có dữ liệu hợp lệ từ API
-      if (newTask != null && newTask['data'] != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tạo task mới thành công!')),
-        );
-      } else {
-        // Nếu không có dữ liệu hợp lệ từ API, hiển thị thông báo lỗi
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Thêm task thất bại: Không có dữ liệu trả về')),
-        );
-      }
-    } catch (e) {
-      // In ra chi tiết lỗi để debug
-      print('Error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Thêm task thất bại: $e')),
+        SnackBar(content: Text('Tạo task mới thành công!')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Thêm task thất bại: Không có dữ liệu trả về')),
       );
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Thêm task thất bại: $e')),
+    );
   }
+}
+
 
   // Hiển thị hộp thoại thêm danh sách mới
   void _showAddListDialog() {
