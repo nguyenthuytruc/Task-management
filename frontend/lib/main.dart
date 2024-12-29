@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:frontend/screen/board_screen.dart';
+import 'package:frontend/screen/dashboard_screen.dart';
 import 'package:frontend/screen/login_screen.dart';
 import 'package:frontend/screen/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,13 +35,14 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false, // Tắt banner debug
       initialRoute: isLoggedIn
-          ? '/board'
+          ? '/dashboard'
           : '/', // Chọn route ban đầu dựa trên trạng thái đăng nhập
       routes: {
         '/': (context) => LoginScreen(), // Đăng nhập
         '/register': (context) => RegisterScreen(), // Đăng ký
-        '/board': (context) =>
-            BoardScreen(), // Màn hình chính sau khi đăng nhập thành công
+        '/board': (context) => BoardScreen(),
+        '/dashboard': (context) =>
+            DashboardScreen(), // Màn hình chính sau khi đăng nhập thành công
       },
     );
   }

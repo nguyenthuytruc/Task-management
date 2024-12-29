@@ -48,7 +48,7 @@ const create = function ({
   type,
   createdAt,
   updatedAt,
-  userId,
+  createdBy,
   boardId
 }) {
   try {
@@ -59,7 +59,7 @@ const create = function ({
       isPinned: false,
       createdAt,
       updatedAt,
-      createdBy: userId,
+      createdBy,
       board: boardId
     });
     newNote.save();
