@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/api_TaskService.dart';
 import 'package:frontend/models/api_listService.dart';
+import 'package:frontend/screen/TaskDetail_Screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ListScreen extends StatefulWidget {
@@ -168,6 +169,30 @@ class _ListScreenState extends State<ListScreen> {
                                               subtitle: Text(
                                                   task['description'] ??
                                                       'Không có mô tả'),
+                                              onTap: () async {
+                                                try {
+                                                  final taskDetails =
+                                                      await _apiTaskService
+                                                          .getTaskById(
+                                                              task['_id']);
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          TaskDetailScreen(
+                                                              taskId:
+                                                                  task['_id'] ),
+                                                    ),
+                                                  );
+                                                } catch (e) {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    SnackBar(
+                                                        content: Text(
+                                                            'Không thể tải chi tiết task: $e')),
+                                                  );
+                                                }
+                                              },
                                             );
                                           },
                                         ),
@@ -260,46 +285,46 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Future<void> _addTaskToList(
-    String listId, String name, String description) async {
-  try {
-    final taskData = {
-      'name': name,
-      'description': description,
-      'listId': listId,
-      'createdBy': _userId, // Sử dụng idUser khi tạo task
-    };
+      String listId, String name, String description) async {
+    try {
+      final taskData = {
+        'name': name,
+        'description': description,
+        'listId': listId,
+        'createdBy': _userId, // Sử dụng idUser khi tạo task
+      };
 
-    final newTask = await _apiTaskService.createTask(taskData);
+      final newTask = await _apiTaskService.createTask(taskData);
 
-    if (newTask != null && newTask['data'] != null) {
-      setState(() {
-        // Cập nhật trực tiếp danh sách task cho danh sách cụ thể
-        _lists = _lists.then((lists) {
-          return lists.map((list) {
-            if (list['_id'] == listId) {
-              if (list['tasks'] == null) list['tasks'] = [];
-              list['tasks'].add(newTask['data']);
-            }
-            return list;
-          }).toList();
+      if (newTask != null && newTask['data'] != null) {
+        setState(() {
+          // Cập nhật trực tiếp danh sách task cho danh sách cụ thể
+          _lists = _lists.then((lists) {
+            return lists.map((list) {
+              if (list['_id'] == listId) {
+                if (list['tasks'] == null) list['tasks'] = [];
+                list['tasks'].add(newTask['data']);
+              }
+              return list;
+            }).toList();
+          });
         });
-      });
 
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Tạo task mới thành công!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Thêm task thất bại: Không có dữ liệu trả về')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tạo task mới thành công!')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Thêm task thất bại: Không có dữ liệu trả về')),
+        SnackBar(content: Text('Thêm task thất bại: $e')),
       );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Thêm task thất bại: $e')),
-    );
   }
-}
-
 
   // Hiển thị hộp thoại thêm danh sách mới
   void _showAddListDialog() {
