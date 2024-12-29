@@ -208,12 +208,12 @@ class _BoardScreenState extends State<BoardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // actions: [
-        //   IconButton(
-        //     onPressed: logout, // Nút đăng xuất
-        //     icon: Icon(Icons.logout), // Biểu tượng logout
-        //   ),
-        //],
+        actions: [
+          IconButton(
+            onPressed: _addBoard, // Nút đăng xuất
+            icon: Icon(Icons.add), // Biểu tượng logout
+          ),
+        ],
         title: Align(
           alignment: Alignment.center, // Căn giữa
           child: Text(
@@ -325,10 +325,10 @@ class _BoardScreenState extends State<BoardScreen> {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addBoard, // Gọi hàm thêm board
-        child: const Icon(Icons.add),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _addBoard, // Gọi hàm thêm board
+      //   child: const Icon(Icons.add),
+      // ),
     );
   }
 }
