@@ -15,7 +15,7 @@ const getAllByIdList = async function (idList) {
   try {
     const tasks = await Task.find({
       listId: idList
-    }).populate("Attachments");
+    }).populate("attachments");
     return tasks;
   } catch (exception) {
     console.log("Error get all Task by List Id: ", exception.message);
