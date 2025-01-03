@@ -262,6 +262,12 @@ class _NoteScreenState extends State<NoteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: _addNote, // Nút add note
+            icon: Icon(Icons.add),
+          ),
+        ],
         title: Align(
           alignment: Alignment.center,
           child: Text(
@@ -283,61 +289,85 @@ class _NoteScreenState extends State<NoteScreen> {
           } else {
             var notes = snapshot.data!;
             return ListView.builder(
-              itemCount: notes.length,
-              itemBuilder: (context, index) {
-                var note = notes[index];
-                return ListTile(
-                  title: Text(note.name),
-                  subtitle: Text(note.description ?? 'Không có mô tả'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () {
-                          _editNote(note);
-                        },
+  itemCount: notes.length,
+  itemBuilder: (context, index) {
+    var note = notes[index];
+    return Card(
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        title: Text(
+          note.name,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          note.description ?? 'Không có mô tả',
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) {
+            if (value == 'edit') {
+              _editNote(note); // Hàm chỉnh sửa ghi chú
+            } else if (value == 'delete') {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text("Xác nhận xóa"),
+                    content: Text("Bạn có chắc chắn muốn xóa ghi chú này không?"),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text("Hủy"),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
+                      TextButton(
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: Text("Xác nhận xóa"),
-                                content: Text("Bạn có chắc chắn muốn xóa ghi chú này không?"),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text("Hủy"),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _deleteNote(note.id!);
-                                    },
-                                    child: Text("Xóa"),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                          Navigator.pop(context);
+                          _deleteNote(note.id!); // Hàm xóa ghi chú
                         },
+                        child: Text("Xóa"),
                       ),
                     ],
-                  ),
-                );
-              },
-            );
+                  );
+                },
+              );
+            }
+          },
+          itemBuilder: (BuildContext context) => [
+            PopupMenuItem(
+              value: 'edit',
+              child: Row(
+                children: [
+                  Icon(Icons.edit, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text('Chỉnh sửa'),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(Icons.delete, color: Colors.red),
+                  SizedBox(width: 8),
+                  Text('Xóa'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  },
+);
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addNote,
-        child: Icon(Icons.add),
-        backgroundColor: Colors.blue,
-      ),
+      
     );
   }
 }
