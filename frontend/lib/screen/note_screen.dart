@@ -257,7 +257,7 @@ class _NoteScreenState extends State<NoteScreen> {
       },
     );
   }
-
+//giao diện
   @override
   Widget build(BuildContext context) {
     return Scaffold(
