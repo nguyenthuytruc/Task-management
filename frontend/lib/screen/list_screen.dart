@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/api_TaskService.dart';
+import 'package:frontend/models/api_boardService.dart';
 import 'package:frontend/models/api_listService.dart';
 import 'package:frontend/screen/TaskDetail_Screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ListScreen extends StatefulWidget {
-  final String boardId;
+  final dynamic board;
 
-  ListScreen({required this.boardId});
+  ListScreen({required this.board});
 
   @override
   _ListScreenState createState() => _ListScreenState();
@@ -16,6 +17,7 @@ class ListScreen extends StatefulWidget {
 class _ListScreenState extends State<ListScreen> {
   final ApiListService _apiListService = ApiListService();
   final ApiTaskService _apiTaskService = ApiTaskService();
+  final ApiBoardService _apiBoardService = ApiBoardService();
   late Future<List<dynamic>> _lists;
   late String _userId;
 
@@ -23,7 +25,7 @@ class _ListScreenState extends State<ListScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _getUserId();
-    _lists = _apiListService.getAllLists(widget.boardId);
+    _lists = _apiListService.getAllLists(widget.board['_id']);
   }
 
   Future<void> _getUserId() async {
@@ -181,7 +183,7 @@ class _ListScreenState extends State<ListScreen> {
                                                       builder: (context) =>
                                                           TaskDetailScreen(
                                                               taskId:
-                                                                  task['_id'] ),
+                                                                  task['_id']),
                                                     ),
                                                   );
                                                 } catch (e) {
@@ -272,7 +274,7 @@ class _ListScreenState extends State<ListScreen> {
                   Navigator.pop(context); // Đóng hộp thoại
                   setState(() {
                     _lists = _apiListService
-                        .getAllLists(widget.boardId); // Làm mới danh sách
+                        .getAllLists(widget.board['_id']); // Làm mới danh sách
                   });
                 }
               },
@@ -375,7 +377,7 @@ class _ListScreenState extends State<ListScreen> {
                   Navigator.pop(context); // Đóng hộp thoại
                   setState(() {
                     _lists = _apiListService
-                        .getAllLists(widget.boardId); // Làm mới danh sách
+                        .getAllLists(widget.board['_id']); // Làm mới danh sách
                   });
                 }
               },
@@ -392,7 +394,7 @@ class _ListScreenState extends State<ListScreen> {
       final listData = {
         'name': name,
         'description': description,
-        'boardId': widget.boardId,
+        'boardId': widget.board['_id'],
         'createdBy': _userId, // Sử dụng idUser khi tạo danh sách
       };
 
@@ -474,7 +476,7 @@ class _ListScreenState extends State<ListScreen> {
                   Navigator.pop(context); // Đóng hộp thoại
                   setState(() {
                     _lists = _apiListService
-                        .getAllLists(widget.boardId); // Làm mới danh sách
+                        .getAllLists(widget.board['_id']); // Làm mới danh sách
                   });
                 }
               },
@@ -538,7 +540,7 @@ class _ListScreenState extends State<ListScreen> {
                   );
                   setState(() {
                     _lists = _apiListService
-                        .getAllLists(widget.boardId); // Làm mới danh sách
+                        .getAllLists(widget.board['_id']); // Làm mới danh sách
                   });
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

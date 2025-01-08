@@ -39,6 +39,7 @@ const getById = async function (req, res) {
   try {
     const existsboard = await boardServices.getById(req.params?.id);
     if (existsboard != null) {
+      console.log(existsboard);
       res.status(200).json({
         message: "success",
         data: {
@@ -102,7 +103,7 @@ const addMembers = async function (req, res) {
   const members = req.body?.email;
   const id = req.params?.id;
   console.log(req.body);
-
+  console.log(id);
   if (members == undefined) {
     return res.status(400).json({
       message: "Not have members to add",
@@ -157,6 +158,7 @@ const removeMembers = async function (req, res) {
 
 const updateById = async function (req, res) {
   const update = await boardServices.updateById(req.params.id.trim(), req.body);
+  console.log("Update board");
 
   if (update !== null) {
     res.status(200).json({

@@ -1,6 +1,6 @@
 import Board from "../entity/Board.js";
 import User from "../entity/User.js";
-
+import mongoose from "mongoose";
 const getById = async function (id) {
   try {
     console.log(id);
@@ -59,11 +59,16 @@ const create = function ({ name, description, members, quantity, owner }) {
 
 const addMembers = async function (id, members) {
   try {
-    const update = await Board.updateOne(
+    const exists = await User.findOne({ email: members });
+    if (!exists) {
+      throw new Error("Không thấy người dùng có mail trong hệ thống!");
+    }
+    console.log(members);
+    await Board.updateOne(
       { _id: id },
       {
-        members,
-        quantity: members.length + 1
+        $addToSet: { members: members }, // Use $addToSet to avoid duplicates
+        $inc: { quantity: 1 } // Increment quantity by 1
       }
     );
     const board = await Board.findById({
@@ -102,17 +107,16 @@ const updateById = async function (id, { name, description, quantity }) {
     console.log({ name, description, quantity });
     console.log(id);
 
-    const update = await Board.updateOne(
-      { _id: id },
-      { name, description, quantity }
-    );
+    // Update the board with the new name, description, and quantity
+    await Board.updateOne({ _id: id }, { name, description, quantity });
 
-    const Board = await Board.findById({
-      _id: id
-    });
+    // Find the updated board by its ID
+    const updatedBoard = await Board.findById(id);
+    console.log(updatedBoard);
 
-    return Board;
+    return updatedBoard;
   } catch (exception) {
+    console.error("Error updating board:", exception);
     return null;
   }
 };
@@ -139,7 +143,6 @@ const getAll = async function () {
     return null;
   }
 };
-
 
 export default {
   getById,

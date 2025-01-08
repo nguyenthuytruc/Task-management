@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/models/api_boardService.dart';
 import 'package:frontend/screen/list_screen.dart';
 import 'package:frontend/screen/login_screen.dart';
+import 'package:frontend/screen/note_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BoardScreen extends StatefulWidget {
@@ -10,136 +11,280 @@ class BoardScreen extends StatefulWidget {
 }
 
 class _BoardScreenState extends State<BoardScreen> {
-  // @override
-  final ApiBoardService _apiUserService =
-      ApiBoardService(); // Tạo đối tượng ApiboardService
-  late Future<List<dynamic>> _boards; // Future để chứa danh sách các board
+  final ApiBoardService _apiUserService = ApiBoardService();
+  late Future<List<dynamic>> _boards;
   String? _idUser;
 
-  Future<String?> getUserId() async {
+  Future<String?> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('idUser'); // Lấy idUser đã lưu
+    return prefs.getString('idUser');
   }
 
   Future<void> _loadUserId() async {
-    final String? idUser = await getUserId();
+    final String? idUser = await _getUserId();
     if (idUser != null) {
-      _boards = _apiUserService.getAllBoards(idUser ?? "");
       setState(() {
         _idUser = idUser;
+        _boards = _apiUserService.getAllBoards(idUser);
       });
-      // Cập nhật lại UI sau khi dữ liệu được load
     } else {
-      // Xử lý khi không có idUser (ví dụ như người dùng chưa đăng nhập)
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không tìm thấy id người dùng.')));
+        SnackBar(content: Text('Không tìm thấy id người dùng.')),
+      );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     }
   }
 
+  void _updateBoard(
+      String boardId, String currentName, String currentDescription) async {
+    TextEditingController nameController =
+        TextEditingController(text: currentName);
+    TextEditingController descriptionController =
+        TextEditingController(text: currentDescription);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Cập Nhật Board"),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: "Tên Board"),
+            ),
+            TextField(
+              controller: descriptionController,
+              decoration: InputDecoration(labelText: "Mô Tả"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () async {
+              String newName = nameController.text;
+              String newDescription = descriptionController.text;
+
+              if (newName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Tên board không thể trống."),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                Map<String, dynamic> updatedData = {
+                  'name': newName,
+                  'description': newDescription,
+                };
+                bool isUpdated =
+                    await _apiUserService.updateBoard(boardId, updatedData);
+
+                if (isUpdated) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã cập nhật board thành công.'),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                  Navigator.pop(context);
+                  setState(() {
+                    _boards = _apiUserService.getAllBoards(_idUser ?? "");
+                  });
+                } else {
+                  throw Exception('Cập nhật board thất bại.');
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi khi cập nhật board: $e')),
+                );
+              }
+            },
+            child: Text("Cập Nhật"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addMember(String boardId) async {
+    // Controller để lấy thông tin thành viên
+    TextEditingController memberController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Thêm Thành Viên"),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: memberController,
+              decoration:
+                  InputDecoration(labelText: "Email hoặc ID Thành Viên"),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () async {
+              String newMember = memberController.text;
+
+              if (newMember.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Email hoặc ID thành viên không thể trống."),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                // Gọi API để thêm thành viên vào board
+                bool isAdded =
+                    await _apiUserService.addMembers(boardId, newMember);
+
+                if (isAdded) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã thêm thành viên thành công.'),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                  Navigator.pop(context);
+                  setState(() {
+                    _boards = _apiUserService.getAllBoards(_idUser ?? "");
+                  });
+                } else {
+                  throw Exception('Thêm thành viên thất bại.');
+                }
+              } catch (e) {
+                print(e.toString().split(":")[2]);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(e.toString().split(":")[2] ??
+                          'Đã xảy ra lỗi không xác định.')),
+                );
+              }
+            },
+            child: Text("Thêm Thành Viên"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _addBoard() async {
-    // Show a dialog to get the board name and description from the user
     TextEditingController nameController = TextEditingController();
     TextEditingController descriptionController = TextEditingController();
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Tạo Board Mới"),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: "Tên Board"),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: "Mô Tả"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Đóng dialog
-              },
-              child: Text("Hủy"),
+      builder: (context) => AlertDialog(
+        title: Text("Tạo Board Mới"),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: "Tên Board"),
             ),
-            TextButton(
-              onPressed: () async {
-                String boardName = nameController.text;
-                String boardDescription = descriptionController.text;
-
-                if (boardName.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text("Tên board không thể trống."),
-                    backgroundColor: Colors.blueAccent,
-                  ));
-                  return;
-                }
-
-                // Lấy idUser từ SharedPreferences hoặc từ context
-                final String? idUser = await getUserId();
-                if (idUser == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Không tìm thấy id người dùng.'),
-                    backgroundColor: Colors.blueAccent,
-                  ));
-                  return;
-                }
-
-                // Tạo board mới bằng API
-                Map<String, dynamic> boardData = {
-                  'name': boardName,
-                  'description': boardDescription,
-                  'status': false,
-                  'owner': idUser,
-                  'members': [idUser],
-                  'lists': [],
-                };
-
-                try {
-                  var response = await _apiUserService.createBoard(boardData);
-
-                  // Xử lý khi tạo board thành công
-                  if (response.containsKey('data')) {
-                    var newBoard = response['data'];
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Đã tạo board mới thành công.'),
-                      backgroundColor: Colors.blueAccent,
-                    ));
-                    Navigator.pop(context); // Đóng dialog
-                    // Thực hiện load lại danh sách boards hoặc chuyển hướng đến board mới
-                    setState(() {
-                      _boards = _apiUserService.getAllBoards(idUser);
-                    });
-                  } else {
-                    throw Exception('Tạo board thất bại');
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Lỗi: ${e.toString()}')));
-                }
-              },
-              child: Text("Tạo Board"),
+            TextField(
+              controller: descriptionController,
+              decoration: InputDecoration(labelText: "Mô Tả"),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () async {
+              String boardName = nameController.text;
+              String boardDescription = descriptionController.text;
+
+              if (boardName.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Tên board không thể trống."),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+                return;
+              }
+
+              final String? idUser = await _getUserId();
+              if (idUser == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Không tìm thấy id người dùng.'),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+                return;
+              }
+
+              Map<String, dynamic> boardData = {
+                'name': boardName,
+                'description': boardDescription,
+                'status': false,
+                'owner': idUser,
+                'members': [idUser],
+                'lists': [],
+              };
+
+              try {
+                var response = await _apiUserService.createBoard(boardData);
+
+                if (response.containsKey('data')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Đã tạo board mới thành công.'),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                  Navigator.pop(context);
+                  setState(() {
+                    _boards = _apiUserService.getAllBoards(idUser);
+                  });
+                } else {
+                  throw Exception('Tạo board thất bại');
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Lỗi: ${e.toString()}')),
+                );
+              }
+            },
+            child: Text("Tạo Board"),
+          ),
+        ],
+      ),
     );
   }
 
   void _deleteBoard(String boardId) async {
     try {
-      // Gọi API xóa board
       bool isDeleted = await _apiUserService.deleteBoard(boardId);
 
       if (isDeleted) {
@@ -149,7 +294,6 @@ class _BoardScreenState extends State<BoardScreen> {
             backgroundColor: Colors.blueAccent,
           ),
         );
-        // Cập nhật lại danh sách boards
         setState(() {
           _boards = _apiUserService.getAllBoards(_idUser ?? "");
         });
@@ -169,83 +313,49 @@ class _BoardScreenState extends State<BoardScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => LoginScreen()),
     );
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    // Lấy idUser từ login response (được truyền từ LoginScreen)
-    final String? idUser =
-        ModalRoute.of(context)?.settings.arguments.toString();
-    if (idUser == 'null') {
-      // Nếu idUser null hoặc rỗng, gọi hàm _loadUserId() để xử lý
-      _loadUserId();
-      _boards = _loadUserIdAndGetBoards();
-    } else {
-      _idUser = idUser;
-      // Gọi API lấy danh sách boards của người dùng khi màn hình được load
-      _boards = _apiUserService.getAllBoards(idUser ?? "");
-    }
+  void initState() {
+    super.initState();
+    _loadUserId();
   }
 
-  Future<List<dynamic>> _loadUserIdAndGetBoards() async {
-    // Giả sử bạn có hàm để lấy idUser
-    if (_idUser != null) {
-      return _apiUserService.getAllBoards(_idUser ?? "");
-    } else {
-      _loadUserId();
-      return []; // Trả về danh sách rỗng nếu không có idUser
-    }
-  }
-
-// //cái này thêm thanh roll,xóa
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: _addBoard, // Nút đăng xuất
-            icon: Icon(Icons.add), // Biểu tượng logout
+            onPressed: _addBoard,
+            icon: Icon(Icons.add),
           ),
         ],
-        title: Align(
-          alignment: Alignment.center, // Căn giữa
+        title: Center(
           child: Text(
             "QTV",
             style: TextStyle(
-              fontSize: 24, // Cỡ chữ lớn hơn
-              fontWeight: FontWeight.bold, // Chữ đậm
-              color: Colors.white, // Màu chữ trắng
-              letterSpacing: 2.0, // Khoảng cách giữa các chữ
-              fontFamily:
-                  'Roboto', // Chọn font chữ (có thể thay đổi tùy theo font bạn muốn)
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 2.0,
             ),
-            textAlign: TextAlign.center,
           ),
         ),
-
-        backgroundColor: Colors.blue, // Tiêu đề màn hình
+        backgroundColor: Colors.blue,
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: _boards, // Sử dụng Future để lấy boards
+        future: _boards,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            // Khi dữ liệu đang được tải
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            // Khi có lỗi khi lấy dữ liệu
             return Center(child: Text("Lỗi: ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            // Nếu không có board nào
             return Center(child: Text("Bạn không có board nào."));
           } else {
-            // Nếu dữ liệu đã được lấy thành công
             var boards = snapshot.data!;
             return ListView.builder(
               itemCount: boards.length,
@@ -259,65 +369,92 @@ class _BoardScreenState extends State<BoardScreen> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(board['description']),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                            icon: Icon(Icons.note, color: Colors.blue),
-                            onPressed: () {
-                              // bỏ cái screen note theo boarid vô chỗ này
-                            }),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text("Xác nhận xóa"),
-                                  content: Text(
-                                      "Bạn có chắc chắn muốn xóa board này không?"),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text("Hủy"),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context); // Đóng dialog
-                                        _deleteBoard(
-                                            board['_id']); // Gọi hàm xóa
-                                      },
-                                      child: Text("Xóa"),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
                     onTap: () {
-                      // Lấy boardId từ dữ liệu board
-                      String boardId =
-                          board['_id'] ?? ''; // Đảm bảo boardId không phải null
-
-                      // Chuyển hướng sang màn hình ListScreen với boardId
-                      if (boardId.isNotEmpty) {
+                      // Ensure boardId is valid before navigation
+                      if (board['_id'] != null && board['_id'].isNotEmpty) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => ListScreen(boardId: boardId),
+                            builder: (context) => ListScreen(
+                              board: board,
+                            ),
                           ),
                         );
                       } else {
-                        // Nếu boardId không hợp lệ, hiển thị thông báo lỗi
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Board không hợp lệ.')),
                         );
                       }
                     },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.note, color: Colors.blue),
+                          onPressed: () {
+                            if (board['_id'].isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NoteScreen(
+                                    boardId: board[
+                                        '_id'], // Chuyển boardId qua NoteScreen
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Board không hợp lệ.')),
+                              );
+                            }
+                          },
+                        ),
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _updateBoard(board['_id'], board['name'],
+                                  board['description']);
+                            } else if (value == 'delete') {
+                              _deleteBoard(board['_id']);
+                            } else if (value == 'addmember') {
+                              _addMember(board['_id']);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.edit, color: Colors.blue),
+                                  SizedBox(width: 8),
+                                  Text('Chỉnh sửa'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Xóa'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'addmember',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.people, color: Colors.red),
+                                  SizedBox(width: 8),
+                                  Text('Thêm thành viên'),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -325,10 +462,6 @@ class _BoardScreenState extends State<BoardScreen> {
           }
         },
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _addBoard, // Gọi hàm thêm board
-      //   child: const Icon(Icons.add),
-      // ),
     );
   }
 }

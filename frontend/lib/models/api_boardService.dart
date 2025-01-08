@@ -14,7 +14,7 @@ class ApiBoardService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
-        print(json);
+
         if (json.containsKey('data')) {
           List<dynamic> list = json['data']['list'] as List<dynamic>;
           if (list.isEmpty) {
@@ -49,17 +49,22 @@ class ApiBoardService {
   }
 
   // Thêm thành viên vào Board
-  Future<bool> addMembers(String boardId, List<String> members) async {
+  Future<bool> addMembers(String boardId, String members) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/boards/$boardId/add-members'),
+        Uri.parse('$baseUrl/api/board/$boardId/add-members'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'members': members}),
+        body: jsonEncode({'email': members}),
       );
 
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return true;
+      } else if (response.statusCode == 400) {
+        throw Exception("Không tìm thấy email");
+      }
+      return false;
     } catch (e) {
-      throw Exception('Failed to add members: $e');
+      throw Exception('$e');
     }
   }
 
@@ -67,7 +72,7 @@ class ApiBoardService {
   Future<bool> removeMembers(String boardId, List<String> members) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/api/boards/$boardId/remove-members'),
+        Uri.parse('$baseUrl/api/board/$boardId/remove-members'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'members': members}),
       );
@@ -82,11 +87,11 @@ class ApiBoardService {
   Future<bool> updateBoard(String boardId, Map<String, dynamic> data) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/boards/$boardId'),
+        Uri.parse('$baseUrl/api/board/$boardId'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(data),
       );
-
+      print(response.body);
       return response.statusCode == 200;
     } catch (e) {
       throw Exception('Failed to update board: $e');
