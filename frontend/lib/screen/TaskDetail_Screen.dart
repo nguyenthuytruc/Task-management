@@ -95,26 +95,26 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
-  Future<void> _loadDates() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? startDateStr = prefs.getString('startDate');
-    String? endDateStr = prefs.getString('endDate');
+Future<void> _loadDates() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? startDateStr = prefs.getString('${widget.taskId}_startDate');
+  String? endDateStr = prefs.getString('${widget.taskId}_endDate');
 
-    setState(() {
-      startDate = startDateStr != null ? DateTime.parse(startDateStr) : null;
-      endDate = endDateStr != null ? DateTime.parse(endDateStr) : null;
-    });
-  }
+  setState(() {
+    startDate = startDateStr != null ? DateTime.parse(startDateStr) : null;
+    endDate = endDateStr != null ? DateTime.parse(endDateStr) : null;
+  });
+}
 
 Future<void> _saveDates() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    if (startDate != null) {
-      prefs.setString('startDate', startDate!.toIso8601String());
-    }
-    if (endDate != null) {
-      prefs.setString('endDate', endDate!.toIso8601String());
-    }
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  if (startDate != null) {
+    prefs.setString('${widget.taskId}_startDate', startDate!.toIso8601String());
   }
+  if (endDate != null) {
+    prefs.setString('${widget.taskId}_endDate', endDate!.toIso8601String());
+  }
+}
 
   // Hàm hiển thị picker ngày
   void _showDatePicker(bool isStartDate) {
