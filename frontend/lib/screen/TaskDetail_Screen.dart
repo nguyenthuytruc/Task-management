@@ -481,7 +481,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                             });
                                             print('Selected member ID: $value');
                                             print('Task ID: ');
-                                            print(taskData!['id']);
+                                            print(taskData?['_id']);
                                             try {
                                               // Gọi API để cập nhật `assignee`
                                               final response = await updateTask(
