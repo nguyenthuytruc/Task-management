@@ -622,35 +622,37 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   //Xử lý vị trí:
-void _showMapPicker() async {
-  final selectedLocation = await showModalBottomSheet<Map<String, double>>(
-    context: context,
-    builder: (BuildContext context) {
-      return Container(
-        height: 400,
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: LatLng(21.0285, 105.8542), // Vị trí ban đầu (ví dụ Hà Nội)
-            zoom: 15,
+  void _showMapPicker() async {
+    final selectedLocation = await showModalBottomSheet<Map<String, double>>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 400,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target:
+                  LatLng(21.0285, 105.8542), // Vị trí ban đầu (ví dụ Hà Nội)
+              zoom: 15,
+            ),
+            onTap: (LatLng latLng) {
+              Navigator.pop(context, {
+                'latitude': latLng.latitude,
+                'longitude': latLng.longitude,
+              });
+            },
           ),
-          onTap: (LatLng latLng) {
-            Navigator.pop(context, {
-              'latitude': latLng.latitude,
-              'longitude': latLng.longitude,
-            });
-          },
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  if (selectedLocation != null) {
-    setState(() {
-      // Lưu vị trí đã chọn vào taskData
-      taskData?['location'] = 'Lat: ${selectedLocation['latitude']}, Lng: ${selectedLocation['longitude']}';
-      taskData?['latitude'] = selectedLocation['latitude'];
-      taskData?['longitude'] = selectedLocation['longitude'];
-    });
+    if (selectedLocation != null) {
+      setState(() {
+        // Lưu vị trí đã chọn vào taskData
+        taskData?['location'] =
+            'Lat: ${selectedLocation['latitude']}, Lng: ${selectedLocation['longitude']}';
+        taskData?['latitude'] = selectedLocation['latitude'];
+        taskData?['longitude'] = selectedLocation['longitude'];
+      });
+    }
   }
-}
 }
