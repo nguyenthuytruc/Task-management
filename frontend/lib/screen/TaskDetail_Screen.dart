@@ -435,7 +435,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Thành viên: ${widget.taskData != null && widget.taskData!.containsKey('assignedTo') ? widget.taskData!['assignedTo'] ?? 'Chưa chọn' : 'Chưa chọn'}',
+                                'Thành viên: ${taskData != null && taskData!.containsKey('assignee') ? '' : 'Chưa chọn'}',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.black87,
@@ -456,9 +456,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                   } else {
                                     return DropdownButton<String>(
                                         isExpanded: true,
-                                        value: widget.taskData != null
-                                            ? widget.taskData!['assignee']
-                                                as String?
+                                        value: taskData != null
+                                            ? taskData!['assignee'] as String?
                                             : null,
                                         items: snapshot.data!
                                             .map<DropdownMenuItem<String>>(
