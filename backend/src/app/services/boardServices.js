@@ -143,6 +143,50 @@ const getAll = async function () {
     return null;
   }
 };
+// router.get("/:id/members", async (req, res) => {
+//   try {
+//     const members = await boardServices.getMembersByBoardId(req.params.id);
+//     if (!members) {
+//       return res.status(404).json({
+//         message: "Board không tồn tại hoặc không có thành viên.",
+//         data: {}
+//       });
+//     }
+
+//     res.status(200).json({
+//       message: "Lấy danh sách thành viên thành công.",
+//       data: { members }
+//     });
+//   } catch (exception) {
+//     res.status(400).json({
+//       message: "Không thể lấy danh sách thành viên.",
+//       error: exception.message,
+//       data: {}
+//     });
+//   }
+// });
+
+
+const getMembersByBoardId = async (boardId) => {
+  // if (!mongoose.Types.ObjectId.isValid(boardId)) {
+  //   throw new Error('Invalid boardId format');
+  // }
+
+  // try {
+    const members = await Member.find({ boardId }); 
+    if (!members) {
+      // throw new Error('No members found for this board');
+      
+    }
+    console.log("members:", members)
+    return members;
+  // } catch (error) {
+  //   throw new Error(`Error fetching members: ${error.message}`);
+  // }
+};
+
+
+
 
 export default {
   getById,
@@ -153,5 +197,6 @@ export default {
   create,
   updateById,
   deleteById,
-  getAll
+  getAll,
+  getMembersByBoardId
 };

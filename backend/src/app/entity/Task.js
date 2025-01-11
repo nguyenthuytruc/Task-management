@@ -28,6 +28,7 @@ const Task = new Schema({
     ref: "Lists",
     required: true
   },
+  assignee: { type: String },
   attachments: [
     {
       type: mongoose.Schema.Types.ObjectId,

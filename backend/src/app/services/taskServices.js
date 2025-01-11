@@ -68,12 +68,12 @@ const create = async function ({
 // Cập nhật list theo id
 const updateById = async function (
   id,
-  { name, description, status, userId, listId }
+  { name, description, status, userId, listId, assignee }
 ) {
   try {
     const update = await Task.updateOne(
       { _id: id },
-      { name, description, status, userId, listId }
+      { name, description, status, userId, listId, assignee }
     );
     if (update.matchedCount === 0) {
       console.log("No Task found with the provided ID.");
