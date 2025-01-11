@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:frontend/models/api_TaskService.dart';
 import 'package:frontend/models/api_boardService.dart';
 import 'package:frontend/models/api_listService.dart';
@@ -58,7 +61,7 @@ class _ListScreenState extends State<ListScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text("Lỗi: ${snapshot.error}"));
+            return Center(child: Text(" ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text("Không có danh sách nào."));
           } else {
@@ -133,67 +136,58 @@ class _ListScreenState extends State<ListScreen> {
                                   ConnectionState.waiting) {
                                 return CircularProgressIndicator();
                               } else if (taskSnapshot.hasError) {
-                                return Text('Lỗi: ${taskSnapshot.error}');
+                                return Text('${taskSnapshot.error}');
                               } else if (!taskSnapshot.hasData ||
                                   taskSnapshot.data!.isEmpty) {
                                 return Text('Không có task nào.');
                               } else {
                                 var tasks = taskSnapshot.data!;
-                                return Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(color: Colors.grey),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: ConstrainedBox(
-                                      constraints:
-                                          BoxConstraints(maxHeight: 200.0),
-                                      child: Scrollbar(
-                                        thumbVisibility: true,
-                                        child: ListView.builder(
-                                          shrinkWrap: true,
-                                          physics: BouncingScrollPhysics(),
-                                          itemCount: tasks.length,
-                                          itemBuilder: (context, taskIndex) {
-                                            var task = tasks[taskIndex];
-                                            return ListTile(
-                                                title: Text(task['name']),
-                                                subtitle: Text(
-                                                    task['description'] ??
-                                                        'Không có mô tả'),
-                                                onTap: () async {
-                                                  try {
-                                                    final taskDetails =
-                                                        await _apiTaskService
-                                                            .getTaskById(
-                                                                task['_id']);
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            TaskDetailScreen(
-                                                          taskId: task['_id'],
-                                                          taskData:
-                                                              taskDetails, // Truyền dữ liệu task ở đây
-                                                              boardId: widget.board['_id'],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  } catch (e) {
-                                                    ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
-                                                      SnackBar(
-                                                          content: Text(
-                                                              'Không thể tải chi tiết task: $e')),
-                                                    );
-                                                  }
-                                                });
+                                return Scrollbar(
+                                  thumbVisibility: true,
+                                  child: ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: BouncingScrollPhysics(),
+                                    itemCount: tasks.length,
+                                    itemBuilder: (context, taskIndex) {
+                                      var task = tasks[taskIndex];
+                                      return Card(
+                                        elevation: 2,
+                                        margin: EdgeInsets.symmetric(
+                                            vertical: 5, horizontal: 10),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: ListTile(
+                                          title: Text(task['name']),
+                                          subtitle: Text(task['description'] ??
+                                              'Không có mô tả'),
+                                          onTap: () async {
+                                            try {
+                                              final taskDetails =
+                                                  await _apiTaskService
+                                                      .getTaskById(task['_id']);
+                                              MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        TaskDetailScreen(
+                                                      taskId: task['_id'],
+                                                      taskData:
+                                                          taskDetails, // Truyền dữ liệu task ở đây
+                                                      boardId: widget.board['_id'],
+                                                    ),
+                                              ),
+                                            } catch (e) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Không thể tải chi tiết task: $e')),
+                                              );
+                                            }
                                           },
                                         ),
-                                      ),
-                                    ),
+                                      );
+                                    },
                                   ),
                                 );
                               }
@@ -309,9 +303,8 @@ class _ListScreenState extends State<ListScreen> {
           });
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Tạo task mới thành công!')),
-        );
+        // Hiển thị hiệu ứng pháo hoa và thông báo
+        _showFireworksAndToast();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -323,6 +316,40 @@ class _ListScreenState extends State<ListScreen> {
         SnackBar(content: Text('Thêm task thất bại: $e')),
       );
     }
+  }
+
+  void _showFireworksAndToast() {
+    // Hiển thị thông báo
+    Fluttertoast.showToast(
+      msg: "Chúc bạn hoàn thành tốt nhé!",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.blueAccent,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+
+    // Hiển thị hiệu ứng pháo hoa (sử dụng một widget để tạo hiệu ứng này)
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Center(
+            child: SpinKitFadingCircle(
+              color: Colors.orange, // Chọn màu cho hiệu ứng
+              size: 50.0,
+            ),
+          ),
+        );
+      },
+    );
+
+    // Đóng hộp thoại sau khi 2 giây
+    Future.delayed(Duration(seconds: 1), () {
+      Navigator.pop(context);
+    });
   }
 
   // Hiển thị hộp thoại thêm danh sách mới
@@ -483,6 +510,14 @@ class _ListScreenState extends State<ListScreen> {
         );
       },
     );
+  }
+
+// Ở màn hình ListScreen
+  void _updateTaskList(String listId) {
+    setState(() {
+      _lists =
+          _apiListService.getAllLists(widget.board['_id']); // Làm mới danh sách
+    });
   }
 
   Future<void> _updateList(String id, String name, String description) async {
