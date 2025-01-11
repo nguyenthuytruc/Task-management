@@ -167,15 +167,17 @@ class _ListScreenState extends State<ListScreen> {
                                               final taskDetails =
                                                   await _apiTaskService
                                                       .getTaskById(task['_id']);
-                                              MaterialPageRoute(
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
                                                     builder: (context) =>
                                                         TaskDetailScreen(
-                                                      taskId: task['_id'],
-                                                      taskData:
-                                                          taskDetails, // Truyền dữ liệu task ở đây
-                                                      boardId: widget.board['_id'],
-                                                    ),
-                                              ),
+                                                          taskId: task['_id'],
+                                                          taskData: taskDetails, // Truyền dữ liệu task ở đây
+                                                          boardId: widget.board['_id'],
+                                                        ),
+                                                  ),
+                                              );
                                             } catch (e) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(
