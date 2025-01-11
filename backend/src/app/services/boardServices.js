@@ -168,17 +168,23 @@ const getAll = async function () {
 
 
 const getMembersByBoardId = async (boardId) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(boardId)) {
-      throw new Error('Invalid boardId format');
-    }
+  // if (!mongoose.Types.ObjectId.isValid(boardId)) {
+  //   throw new Error('Invalid boardId format');
+  // }
 
-    const members = await Member.find({ boardId }); // replace Member with the actual model name
+  // try {
+    const members = await Member.find({ boardId }); 
+    if (!members) {
+      // throw new Error('No members found for this board');
+      
+    }
+    console.log("members:", members)
     return members;
-  } catch (error) {
-    throw new Error('Error fetching members');
-  }
+  // } catch (error) {
+  //   throw new Error(`Error fetching members: ${error.message}`);
+  // }
 };
+
 
 
 

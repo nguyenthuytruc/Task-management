@@ -138,7 +138,7 @@ Future<Map<String, dynamic>> updateTask(String id, Map<String, dynamic> data) as
       body: jsonEncode(data),
     );
 
-    if (response.statusCode == 200) {
+    if (response.statusCode < 300) {
       return jsonDecode(response.body);
     } else {
       return Future.error('Failed to update task: ${response.statusCode}');

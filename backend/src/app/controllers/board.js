@@ -189,38 +189,34 @@ const deleteById = async function (req, res) {
     });
   }
 };
+import Board from "../entity/Board.js";
 const getMembersByBoardId = async (req, res) => {
-  // try {
-    const boardId = req.params.id;
+  try {
+    const { id } = req.params;
 
-    // Kiểm tra định dạng ObjectId
-    if (!mongoose.Types.ObjectId.isValid(boardId)) {
-      return res.status(400).json({
-        message: "Invalid boardId format",
-        data: {}
-      });
+    // Kiểm tra xem id có hợp lệ không
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid board ID" });
     }
 
-    const members = await boardServices.getMembersByBoardId(boardId);
+    // Tìm board theo ID
+    const board = await Board.findById(id).lean();
 
-    if (members && members.length > 0) {
-      res.status(200).json({
-        message: "Get members by board ID successful",
-        data: { members }
-      });
-    } else {
-      res.status(404).json({
-        message: "Board not found or no members",
-        data: {}
-      });
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
     }
-  // } catch (error) {
-  //   console.error("Error in getMembersByBoardId controller:", error.message);
-  //   res.status(500).json({
-  //     message: "Error retrieving members",
-  //     data: {}
-  //   });
-  // }
+
+    // Lấy danh sách members
+    const members = board.members || [];
+
+    console.log("board:", board);
+    console.log("members:", members);
+
+    return res.status(200).json({ members });
+  } catch (error) {
+    console.error("Error fetching board members:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 

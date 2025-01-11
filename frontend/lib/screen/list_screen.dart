@@ -176,6 +176,7 @@ class _ListScreenState extends State<ListScreen> {
                                                           taskId: task['_id'],
                                                           taskData:
                                                               taskDetails, // Truyền dữ liệu task ở đây
+                                                              boardId: widget.board['_id'],
                                                         ),
                                                       ),
                                                     );

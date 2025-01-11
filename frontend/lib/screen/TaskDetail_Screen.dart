@@ -8,11 +8,16 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:frontend/models/api_TaskService.dart';
 
 class TaskDetailScreen extends StatefulWidget {
+  final ApiTaskService _apiTaskService = ApiTaskService();
   final String taskId;
   final Map<String, dynamic>? taskData;
-  TaskDetailScreen({required this.taskId, this.taskData});
+  final String boardId;
+
+  TaskDetailScreen(
+      {required this.taskId, this.taskData, required this.boardId});
 
   @override
   _TaskDetailScreenState createState() => _TaskDetailScreenState();
@@ -184,24 +189,55 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  Future<List<dynamic>> getBoardMembers(String boardId) async {
+  // Future<List<dynamic>> getBoardMembers(String boardId) async {
+  //   try {
+  //     final response = await http
+  //         .get(Uri.parse('http://10.0.2.2:3000/api/board/$boardId/members'));
+
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       if (data is List) {
+  //         return data;
+  //       } else {
+  //         throw Exception('Dữ liệu không hợp lệ');
+  //       }
+  //     } else {
+  //       throw Exception('Lỗi phản hồi: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Lỗi khi tải thành viên: $e');
+  //     throw Exception('Không thể tải danh sách thành viên');
+  //   }
+  // }
+  Future<List<String>> getBoardMembers(String boardId) async {
+    print('Boardid: ${boardId}');
     try {
-      final response = await http
-          .get(Uri.parse('http://10.0.2.2:3000/api/board/$boardId/members'));
+      // Gửi request GET đến API
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3000/api/board/$boardId/members'),
+      );
+
+      // In toàn bộ response để debug
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
+        // Parse JSON response body
         final data = jsonDecode(response.body);
-        if (data is List) {
-          return data;
-        } else {
-          throw Exception('Dữ liệu không hợp lệ');
+
+        // Kiểm tra và trả về danh sách members nếu có
+        if (data['members'] != null && data['members'] is List) {
+          return List<String>.from(data['members']);
         }
-      } else {
-        throw Exception('Lỗi phản hồi: ${response.statusCode}');
       }
-    } catch (e) {
-      print('Lỗi khi tải thành viên: $e');
-      throw Exception('Không thể tải danh sách thành viên');
+
+      // Nếu không phải statusCode 200 hoặc response không đúng định dạng
+      print('Unexpected response format');
+      return [];
+    } catch (error) {
+      // Log lỗi nếu xảy ra
+      print('Error fetching board members: $error');
+      return [];
     }
   }
 
@@ -406,7 +442,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                 ),
                               ),
                               FutureBuilder<List<dynamic>>(
-                                future: getBoardMembers('boardId'),
+                                future: getBoardMembers(widget.boardId),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
@@ -419,57 +455,50 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                         'Không có thành viên nào trong board này');
                                   } else {
                                     return DropdownButton<String>(
-                                      isExpanded: true,
-                                      value: widget.taskData != null
-                                          ? widget.taskData!['assignedTo']
-                                              as String?
-                                          : null,
-                                      items: snapshot.data!
-                                          .map<DropdownMenuItem<String>>(
-                                              (member) {
-                                        return DropdownMenuItem<String>(
-                                          value: member['id'].toString(),
-                                          child: Text(member['name']),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          if (widget.taskData != null) {
-                                            widget.taskData!['assignedTo'] =
-                                                value;
+                                        isExpanded: true,
+                                        value: widget.taskData != null
+                                            ? widget.taskData!['assignee']
+                                                as String?
+                                            : null,
+                                        items: snapshot.data!
+                                            .map<DropdownMenuItem<String>>(
+                                                (member) {
+                                          return DropdownMenuItem<String>(
+                                            value:
+                                                member, // member ở đây có thể là email hoặc ID
+                                            child: Text(
+                                                member), // Hiển thị tên hoặc email
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) async {
+                                          // Kiểm tra nếu `value` không null trước khi thực hiện hành động
+                                          if (value != null) {
+                                            // Cập nhật trạng thái tại giao diện
+                                            setState(() {
+                                              if (widget.taskData != null) {
+                                                widget.taskData!['assignee'] =
+                                                    value;
+                                              }
+                                            });
+                                            print('Selected member ID: $value');
+                                            print('Task ID: ');
+                                            print(taskData!['id']);
+                                            try {
+                                              // Gọi API để cập nhật `assignee`
+                                              final response = await updateTask(
+                                                  taskData?['_id'],
+                                                  {'assignee': value});
+                                              print(
+                                                  'Task updated successfully: $response');
+                                            } catch (error) {
+                                              print(
+                                                  'Failed to update task: $error');
+                                              // Có thể hiển thị thông báo lỗi cho người dùng nếu cần
+                                            }
                                           }
                                         });
-                                      },
-                                    );
                                   }
                                 },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Thêm một phần để hiển thị và chọn vị trí
-                      SizedBox(height: 8), // Khoảng cách
-                      Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Vị trí: ${taskData?['location'] ?? 'Chưa chọn'}',
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.black87),
-                              ),
-                              IconButton(
-                                icon:
-                                    Icon(Icons.location_on, color: Colors.blue),
-                                onPressed: () => _showMapPicker(),
                               ),
                             ],
                           ),
@@ -479,6 +508,26 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
     );
+  }
+
+  Future<Map<String, dynamic>> updateTask(
+      String id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+            'http://10.0.2.2:3000/api/task/$id'), // Sửa URL đúng với route
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        return Future.error('Failed to update task: ${response.statusCode}');
+      }
+    } catch (e) {
+      return Future.error('Error: $e');
+    }
   }
 
   void _showEditDialog() {
