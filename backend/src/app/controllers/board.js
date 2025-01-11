@@ -1,5 +1,6 @@
 import boardServices from "../services/boardServices.js";
 import Result from "../common/Result.js";
+import mongoose from "mongoose";
 
 const getAll = async function (req, res) {
   try {
@@ -188,6 +189,36 @@ const deleteById = async function (req, res) {
     });
   }
 };
+import Board from "../entity/Board.js";
+const getMembersByBoardId = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Kiểm tra xem id có hợp lệ không
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid board ID" });
+    }
+
+    // Tìm board theo ID
+    const board = await Board.findById(id).lean();
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    // Lấy danh sách members
+    const members = board.members || [];
+
+    console.log("board:", board);
+    console.log("members:", members);
+
+    return res.status(200).json({ members });
+  } catch (error) {
+    console.error("Error fetching board members:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 export default {
   getAll,
@@ -198,5 +229,6 @@ export default {
   getById,
   create,
   updateById,
-  deleteById
+  deleteById,
+  getMembersByBoardId
 };

@@ -11,8 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
+  final Map<String, dynamic>? taskData;
+  final String boardId;
 
-  TaskDetailScreen({required this.taskId});
+  TaskDetailScreen(
+      {required this.taskId, this.taskData, required this.boardId});
 
   @override
   _TaskDetailScreenState createState() => _TaskDetailScreenState();
@@ -69,36 +72,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       });
     }
   }
-
-  // Future<void> _updateTask() async {
-  //   try {
-  //     final response = await http.put(
-  //       Uri.parse('http://10.0.2.2:3000/api/task/${widget.taskId}'),
-  //       headers: {'Content-Type': 'application/json'},
-  //       body: jsonEncode({
-  //         'name': taskData?['name'],
-  //         'description': taskData?['description'],
-  //         'startDate': startDate?.toIso8601String(),
-  //         'endDate': endDate?.toIso8601String(),
-  //       }),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Cập nhật Task thành công')),
-  //       );
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //             content: Text('Không thể cập nhật Task: ${response.statusCode}')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Lỗi khi cập nhật Task: $e')),
-  //     );
-  //   }
-  // }
 
   Future<void> _loadDates() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -184,218 +157,56 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(taskData?['name'] ?? 'Chi tiết Task'),
-        backgroundColor: Colors.blue,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'edit') {
-                _showEditDialog();
-              } else if (value == 'delete') {
-                _deleteTask();
-              } else if (value == 'cover') {
-                _showCoverDialog();
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem<String>(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit, size: 18),
-                      SizedBox(width: 8),
-                      Text('Chỉnh sửa'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, size: 18),
-                      SizedBox(width: 8),
-                      Text('Xóa'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem<String>(
-                  value: 'cover',
-                  child: Row(
-                    children: [
-                      Icon(Icons.image, size: 18),
-                      SizedBox(width: 8),
-                      Text('Chọn ảnh bìa'),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
-        ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : errorMessage != null
-              ? Center(
-                  child: Text(errorMessage!),
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Image with reduced height
-                      if (taskData?['coverImage'] != null)
-                        Image.file(
-                          File(taskData!['coverImage']),
-                          width: double.infinity,
-                          height: 150, // Reduced height
-                          fit: BoxFit.cover,
-                        )
-                      else if (taskData?['coverColor'] != null)
-                        Container(
-                          width: double.infinity,
-                          height: 150, // Reduced height
-                          color: Color(int.parse(taskData!['coverColor'])),
-                        )
-                      else
-                        SizedBox.shrink(),
+  Future<List<String>> getBoardMembers(String boardId) async {
+    print('Boardid: ${boardId}');
+    try {
+      // Gửi request GET đến API
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:3000/api/board/$boardId/members'),
+      );
 
-                      // Title and description with reduced padding
-                      SizedBox(height: 8), // Reduced space
-                      Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.all(12.0), // Reduced padding
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Tên Task: ${taskData?['name']}',
-                                      style: TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      // Xử lý di chuyển ở đây
-                                      print("Di chuyển task");
-                                    },
-                                    child: Text(
-                                      "Di chuyển",
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.blue,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 6), // Reduced space
-                              Text(
-                                  'Mô tả: ${taskData?['description'] ?? 'Không có mô tả'}',
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.black54)),
-                            ],
-                          ),
-                        ),
-                      ),
+      // In toàn bộ response để debug
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
-                      // Date section with reduced space
-                      SizedBox(height: 8), // Reduced space
-                      Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.all(12.0), // Reduced padding
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Ngày bắt đầu: ${startDate != null ? DateFormat('dd/MM/yyyy').format(startDate!) : 'Chưa chọn'}',
-                                    style: TextStyle(
-                                        fontSize: 16, color: Colors.black87),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.edit_calendar,
-                                        color: Colors.blue),
-                                    onPressed: () => _showDatePicker(true),
-                                  ),
-                                ],
-                              ),
-                              Divider(color: Colors.black38),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Ngày kết thúc: ${endDate != null ? DateFormat('dd/MM/yyyy').format(endDate!) : 'Chưa chọn'}',
-                                    style: TextStyle(
-                                        fontSize: 16, color: Colors.black87),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(Icons.edit_calendar,
-                                        color: Colors.blue),
-                                    onPressed: () => _showDatePicker(false),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Thêm một phần để hiển thị và chọn vị trí
-                      SizedBox(height: 8), // Khoảng cách
-                      Card(
-                        elevation: 5,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Vị trí: ${taskData?['location'] ?? 'Chưa chọn'}',
-                                style: TextStyle(
-                                    fontSize: 16, color: Colors.black87),
-                              ),
-                              IconButton(
-                                icon:
-                                    Icon(Icons.location_on, color: Colors.blue),
-                                onPressed: () => _showMapPicker(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-    );
+      if (response.statusCode == 200) {
+        // Parse JSON response body
+        final data = jsonDecode(response.body);
+
+        // Kiểm tra và trả về danh sách members nếu có
+        if (data['members'] != null && data['members'] is List) {
+          return List<String>.from(data['members']);
+        }
+      }
+
+      // Nếu không phải statusCode 200 hoặc response không đúng định dạng
+      print('Unexpected response format');
+      return [];
+    } catch (error) {
+      // Log lỗi nếu xảy ra
+      print('Error fetching board members: $error');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> updateTask(
+      String id, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+            'http://10.0.2.2:3000/api/task/$id'), // Sửa URL đúng với route
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        return Future.error('Failed to update task: ${response.statusCode}');
+      }
+    } catch (e) {
+      return Future.error('Error: $e');
+    }
   }
 
   void _showEditDialog() {
@@ -654,5 +465,273 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         taskData?['longitude'] = selectedLocation['longitude'];
       });
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(taskData?['name'] ?? 'Chi tiết Task'),
+        backgroundColor: Colors.blue,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'edit') {
+                _showEditDialog();
+              } else if (value == 'delete') {
+                _deleteTask();
+              } else if (value == 'cover') {
+                _showCoverDialog();
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18),
+                      SizedBox(width: 8),
+                      Text('Chỉnh sửa'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 18),
+                      SizedBox(width: 8),
+                      Text('Xóa'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'cover',
+                  child: Row(
+                    children: [
+                      Icon(Icons.image, size: 18),
+                      SizedBox(width: 8),
+                      Text('Chọn ảnh bìa'),
+                    ],
+                  ),
+                ),
+              ];
+            },
+          ),
+        ],
+      ),
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : errorMessage != null
+              ? Center(
+                  child: Text(errorMessage!),
+                )
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Image with reduced height
+                      if (taskData?['coverImage'] != null)
+                        Image.file(
+                          File(taskData!['coverImage']),
+                          width: double.infinity,
+                          height: 150, // Reduced height
+                          fit: BoxFit.cover,
+                        )
+                      else if (taskData?['coverColor'] != null)
+                        Container(
+                          width: double.infinity,
+                          height: 150, // Reduced height
+                          color: Color(int.parse(taskData!['coverColor'])),
+                        )
+                      else
+                        SizedBox.shrink(),
+
+                      // Title and description with reduced padding
+                      SizedBox(height: 8), // Reduced space
+                      Card(
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.all(12.0), // Reduced padding
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Tên Task: ${taskData?['name']}',
+                                      style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blue),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      // Xử lý di chuyển ở đây
+                                      print("Di chuyển task");
+                                    },
+                                    child: Text(
+                                      "Di chuyển",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 6), // Reduced space
+                              Text(
+                                  'Mô tả: ${taskData?['description'] ?? 'Không có mô tả'}',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.black54)),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Date section with reduced space
+                      SizedBox(height: 8), // Reduced space
+                      Card(
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.all(12.0), // Reduced padding
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Ngày bắt đầu: ${startDate != null ? DateFormat('dd/MM/yyyy').format(startDate!) : 'Chưa chọn'}',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.black87),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.edit_calendar,
+                                        color: Colors.blue),
+                                    onPressed: () => _showDatePicker(true),
+                                  ),
+                                ],
+                              ),
+                              Divider(color: Colors.black38),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Ngày kết thúc: ${endDate != null ? DateFormat('dd/MM/yyyy').format(endDate!) : 'Chưa chọn'}',
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.black87),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.edit_calendar,
+                                        color: Colors.blue),
+                                    onPressed: () => _showDatePicker(false),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Card(
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Thành viên: ${taskData != null && taskData!.containsKey('assignee') ? '' : 'Chưa chọn'}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              FutureBuilder<List<dynamic>>(
+                                future: getBoardMembers(widget.boardId),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return CircularProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    return Text('Lỗi: ${snapshot.error}');
+                                  } else if (!snapshot.hasData ||
+                                      snapshot.data!.isEmpty) {
+                                    return Text(
+                                        'Không có thành viên nào trong board này');
+                                  } else {
+                                    return DropdownButton<String>(
+                                        isExpanded: true,
+                                        value: taskData != null
+                                            ? taskData!['assignee'] as String?
+                                            : null,
+                                        items: snapshot.data!
+                                            .map<DropdownMenuItem<String>>(
+                                                (member) {
+                                          return DropdownMenuItem<String>(
+                                            value:
+                                                member, // member ở đây có thể là email hoặc ID
+                                            child: Text(
+                                                member), // Hiển thị tên hoặc email
+                                          );
+                                        }).toList(),
+                                        onChanged: (value) async {
+                                          // Kiểm tra nếu `value` không null trước khi thực hiện hành động
+                                          if (value != null) {
+                                            // Cập nhật trạng thái tại giao diện
+                                            setState(() {
+                                              if (widget.taskData != null) {
+                                                widget.taskData!['assignee'] =
+                                                    value;
+                                              }
+                                            });
+                                            print('Selected member ID: $value');
+                                            print('Task ID: ');
+                                            print(taskData?['_id']);
+                                            try {
+                                              // Gọi API để cập nhật `assignee`
+                                              final response = await updateTask(
+                                                  taskData?['_id'],
+                                                  {'assignee': value});
+                                              print(
+                                                  'Task updated successfully: $response');
+                                            } catch (error) {
+                                              print(
+                                                  'Failed to update task: $error');
+                                              // Có thể hiển thị thông báo lỗi cho người dùng nếu cần
+                                            }
+                                          }
+                                        });
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+    );
   }
 }

@@ -168,12 +168,15 @@ class _ListScreenState extends State<ListScreen> {
                                                   await _apiTaskService
                                                       .getTaskById(task['_id']);
                                               Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      TaskDetailScreen(
-                                                          taskId: task['_id']),
-                                                ),
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        TaskDetailScreen(
+                                                          taskId: task['_id'],
+                                                          taskData: taskDetails, // Truyền dữ liệu task ở đây
+                                                          boardId: widget.board['_id'],
+                                                        ),
+                                                  ),
                                               );
                                             } catch (e) {
                                               ScaffoldMessenger.of(context)
