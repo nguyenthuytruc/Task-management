@@ -11,8 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TaskDetailScreen extends StatefulWidget {
   final String taskId;
-
-  TaskDetailScreen({required this.taskId});
+  final Map<String, dynamic>? taskData;
+  TaskDetailScreen({required this.taskId, this.taskData});
 
   @override
   _TaskDetailScreenState createState() => _TaskDetailScreenState();
@@ -182,6 +182,27 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         );
       },
     );
+  }
+
+  Future<List<dynamic>> getBoardMembers(String boardId) async {
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:3000/api/board/$boardId/members'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data is List) {
+          return data;
+        } else {
+          throw Exception('Dữ liệu không hợp lệ');
+        }
+      } else {
+        throw Exception('Lỗi phản hồi: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Lỗi khi tải thành viên: $e');
+      throw Exception('Không thể tải danh sách thành viên');
+    }
   }
 
   @override
@@ -366,6 +387,68 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 8),
+                      Card(
+                        elevation: 5,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Thành viên: ${widget.taskData != null && widget.taskData!.containsKey('assignedTo') ? widget.taskData!['assignedTo'] ?? 'Chưa chọn' : 'Chưa chọn'}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              FutureBuilder<List<dynamic>>(
+                                future: getBoardMembers('boardId'),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return CircularProgressIndicator();
+                                  } else if (snapshot.hasError) {
+                                    return Text('Lỗi: ${snapshot.error}');
+                                  } else if (!snapshot.hasData ||
+                                      snapshot.data!.isEmpty) {
+                                    return Text(
+                                        'Không có thành viên nào trong board này');
+                                  } else {
+                                    return DropdownButton<String>(
+                                      isExpanded: true,
+                                      value: widget.taskData != null
+                                          ? widget.taskData!['assignedTo']
+                                              as String?
+                                          : null,
+                                      items: snapshot.data!
+                                          .map<DropdownMenuItem<String>>(
+                                              (member) {
+                                        return DropdownMenuItem<String>(
+                                          value: member['id'].toString(),
+                                          child: Text(member['name']),
+                                        );
+                                      }).toList(),
+                                      onChanged: (value) {
+                                        setState(() {
+                                          if (widget.taskData != null) {
+                                            widget.taskData!['assignedTo'] =
+                                                value;
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                       // Thêm một phần để hiển thị và chọn vị trí
                       SizedBox(height: 8), // Khoảng cách
                       Card(
@@ -622,35 +705,37 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   //Xử lý vị trí:
-void _showMapPicker() async {
-  final selectedLocation = await showModalBottomSheet<Map<String, double>>(
-    context: context,
-    builder: (BuildContext context) {
-      return Container(
-        height: 400,
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: LatLng(21.0285, 105.8542), // Vị trí ban đầu (ví dụ Hà Nội)
-            zoom: 15,
+  void _showMapPicker() async {
+    final selectedLocation = await showModalBottomSheet<Map<String, double>>(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 400,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target:
+                  LatLng(21.0285, 105.8542), // Vị trí ban đầu (ví dụ Hà Nội)
+              zoom: 15,
+            ),
+            onTap: (LatLng latLng) {
+              Navigator.pop(context, {
+                'latitude': latLng.latitude,
+                'longitude': latLng.longitude,
+              });
+            },
           ),
-          onTap: (LatLng latLng) {
-            Navigator.pop(context, {
-              'latitude': latLng.latitude,
-              'longitude': latLng.longitude,
-            });
-          },
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  if (selectedLocation != null) {
-    setState(() {
-      // Lưu vị trí đã chọn vào taskData
-      taskData?['location'] = 'Lat: ${selectedLocation['latitude']}, Lng: ${selectedLocation['longitude']}';
-      taskData?['latitude'] = selectedLocation['latitude'];
-      taskData?['longitude'] = selectedLocation['longitude'];
-    });
+    if (selectedLocation != null) {
+      setState(() {
+        // Lưu vị trí đã chọn vào taskData
+        taskData?['location'] =
+            'Lat: ${selectedLocation['latitude']}, Lng: ${selectedLocation['longitude']}';
+        taskData?['latitude'] = selectedLocation['latitude'];
+        taskData?['longitude'] = selectedLocation['longitude'];
+      });
+    }
   }
-}
 }

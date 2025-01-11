@@ -12,5 +12,6 @@ router.put("/:id", BoardController.updateById);
 router.delete("/delete/:id", BoardController.deleteById);
 router.post("/", BoardController.create);
 router.get("/", BoardController.getAll);
+router.get("/:id/members", BoardController.getMembersByBoardId);
 
 export default router;

@@ -158,35 +158,37 @@ class _ListScreenState extends State<ListScreen> {
                                           itemBuilder: (context, taskIndex) {
                                             var task = tasks[taskIndex];
                                             return ListTile(
-                                              title: Text(task['name']),
-                                              subtitle: Text(
-                                                  task['description'] ??
-                                                      'Không có mô tả'),
-                                              onTap: () async {
-                                                try {
-                                                  final taskDetails =
-                                                      await _apiTaskService
-                                                          .getTaskById(
-                                                              task['_id']);
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          TaskDetailScreen(
-                                                              taskId:
-                                                                  task['_id']),
-                                                    ),
-                                                  );
-                                                } catch (e) {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    SnackBar(
-                                                        content: Text(
-                                                            'Không thể tải chi tiết task: $e')),
-                                                  );
-                                                }
-                                              },
-                                            );
+                                                title: Text(task['name']),
+                                                subtitle: Text(
+                                                    task['description'] ??
+                                                        'Không có mô tả'),
+                                                onTap: () async {
+                                                  try {
+                                                    final taskDetails =
+                                                        await _apiTaskService
+                                                            .getTaskById(
+                                                                task['_id']);
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            TaskDetailScreen(
+                                                          taskId: task['_id'],
+                                                          taskData:
+                                                              taskDetails, // Truyền dữ liệu task ở đây
+                                                        ),
+                                                      ),
+                                                    );
+                                                  } catch (e) {
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .showSnackBar(
+                                                      SnackBar(
+                                                          content: Text(
+                                                              'Không thể tải chi tiết task: $e')),
+                                                    );
+                                                  }
+                                                });
                                           },
                                         ),
                                       ),

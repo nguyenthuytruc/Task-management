@@ -28,6 +28,26 @@ class ApiTaskService {
       return Future.error('Lỗi: $e');
     }
   }
+  Future<bool> moveTask(String taskId, String newListId, String newBoardId) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/api/task/move/$taskId'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'taskId': taskId,
+      'newListId': newListId,
+      'newBoardId': newBoardId,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    throw Exception('Lỗi khi di chuyển task');
+  }
+}
+
   // Lấy danh sách tất cả Task theo ID của List
 Future<List<dynamic>> getAllTasksByListId(String idList) async {
   try {
@@ -70,7 +90,26 @@ Future<Map<String, dynamic>> getTaskById(String id) async {
   }
 }
 
+Future<List<dynamic>> getBoardMembers(String boardId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/api/board/$boardId/members'));
 
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> json = jsonDecode(response.body);
+
+        // Kiểm tra xem có dữ liệu không
+        if (json.containsKey('data') && json['data']['list'] != null) {
+          return json['data']['list'] as List<dynamic>;
+        } else {
+          return Future.error('Không tìm thấy thành viên nào trong board này.');
+        }
+      } else {
+        return Future.error('Không thể tải danh sách thành viên: ${response.statusCode}');
+      }
+    } catch (e) {
+      return Future.error('Lỗi: $e');
+    }
+  }
   /// Tạo một task mới
 Future<Map<String, dynamic>> createTask(Map<String, dynamic> taskData) async {
   try {
