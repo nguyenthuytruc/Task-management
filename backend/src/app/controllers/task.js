@@ -81,6 +81,7 @@ const create = async function (req, res) {
 
 const updateById = async function (req, res) {
   const update = await taskServices.updateById(req.params.id.trim(), req.body);
+  console.log("Update");
 
   if (update !== null) {
     res.status(200).json({
@@ -114,6 +115,8 @@ const deleteById = async function (req, res) {
 const registerEmail = async function (req, res) {
   const taskId = req.params.id;
   const { permited } = req.body;
+  console.log("Register Email");
+  console.log(req.body);
 
   if (!permited || !Array.isArray(permited)) {
     return res.status(400).json({

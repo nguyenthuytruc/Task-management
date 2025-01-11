@@ -63,6 +63,8 @@ const getById = async function (req, res) {
 
 const getCoopboardByIdUser = async function (req, res) {
   try {
+    console.log(req.params.idUser);
+
     const listboards = await boardServices.getCoopBoardByIdUser(
       req.params?.idUser
     );
@@ -218,7 +220,6 @@ const getMembersByBoardId = async (req, res) => {
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 export default {
   getAll,

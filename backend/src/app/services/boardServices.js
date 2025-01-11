@@ -1,4 +1,5 @@
 import Board from "../entity/Board.js";
+import Noti from "../entity/Noti.js";
 import User from "../entity/User.js";
 import mongoose from "mongoose";
 const getById = async function (id) {
@@ -64,6 +65,7 @@ const addMembers = async function (id, members) {
       throw new Error("Không thấy người dùng có mail trong hệ thống!");
     }
     console.log(members);
+
     await Board.updateOne(
       { _id: id },
       {
@@ -73,6 +75,11 @@ const addMembers = async function (id, members) {
     );
     const board = await Board.findById({
       _id: id
+    });
+    await Noti.create({
+      userId: exists._id,
+      title: "Thêm vào bảng mới",
+      description: `Bạn đã được thêm vào bảng ${board.name}`
     });
 
     return board;
@@ -166,27 +173,22 @@ const getAll = async function () {
 //   }
 // });
 
-
 const getMembersByBoardId = async (boardId) => {
   // if (!mongoose.Types.ObjectId.isValid(boardId)) {
   //   throw new Error('Invalid boardId format');
   // }
 
   // try {
-    const members = await Member.find({ boardId }); 
-    if (!members) {
-      // throw new Error('No members found for this board');
-      
-    }
-    console.log("members:", members)
-    return members;
+  const members = await Member.find({ boardId });
+  if (!members) {
+    // throw new Error('No members found for this board');
+  }
+  console.log("members:", members);
+  return members;
   // } catch (error) {
   //   throw new Error(`Error fetching members: ${error.message}`);
   // }
 };
-
-
-
 
 export default {
   getById,

@@ -285,7 +285,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       );
 
       if (response.statusCode == 200) {
-        Navigator.pop(context); // Quay lại màn hình trước đó
+        Navigator.pop(context, widget.taskId); // Quay lại màn hình trước đó
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể xóa task: ${response.statusCode}')),
@@ -567,7 +567,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      'Tên Task: ${taskData?['name']}',
+                                      '${taskData?['name']}',
                                       style: TextStyle(
                                           fontSize: 22,
                                           fontWeight: FontWeight.bold,
@@ -713,8 +713,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                               final response = await updateTask(
                                                   taskData?['_id'],
                                                   {'assignee': value});
-                                              print(
-                                                  'Task updated successfully: $response');
+                                              _fetchTaskDetails();
                                             } catch (error) {
                                               print(
                                                   'Failed to update task: $error');
