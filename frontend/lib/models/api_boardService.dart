@@ -33,6 +33,34 @@ class ApiBoardService {
     }
   }
 
+  // Lấy danh sách tất cả Coop Board (mình là member)
+  Future<List<dynamic>> getAllBoardsCoop(String idUser) async {
+    try {
+      print("Get Coop");
+      final response =
+          await http.get(Uri.parse('$baseUrl/api/board/c/$idUser'));
+      print(idUser);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> json = jsonDecode(response.body);
+
+        if (json.containsKey('data')) {
+          List<dynamic> list = json['data']['list'] as List<dynamic>;
+          if (list.isEmpty) {
+            return [];
+          } else {
+            return list;
+          }
+        } else {
+          throw Exception('Key "list" not found in response.');
+        }
+      } else {
+        throw Exception('Failed to load boards: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
+
   // Lấy thông tin chi tiết của một Board
   Future<Map<String, dynamic>> getBoardById(String id) async {
     try {

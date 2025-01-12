@@ -1,4 +1,5 @@
 import User from "../entity/User.js";
+import Noti from "../entity/Noti.js";
 
 import bycrypt from "bcrypt";
 
@@ -24,6 +25,13 @@ const getById = async function (id) {
 const getAll = async function () {
   let userExists = await User.find();
   return userExists ?? null;
+};
+
+const getAllNotiByUserId = async function (userId) {
+  const listNoti = await Noti.find({
+    userId: userId
+  });
+  return listNoti ?? null;
 };
 
 const login = async function ({ email, password }) {
@@ -89,5 +97,6 @@ export default {
   getById,
   getAll,
   register,
-  login
+  login,
+  getAllNotiByUserId
 };

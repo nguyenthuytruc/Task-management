@@ -13,7 +13,11 @@ const Board = new Schema({
     ref: "User",
     required: true
   },
-  members: [{ type: String }],
+  members: [
+    {
+      type: String // Tham chiếu tới model User
+    }
+  ],
   lists: [
     {
       type: mongoose.Schema.Types.ObjectId,

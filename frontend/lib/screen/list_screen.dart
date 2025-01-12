@@ -47,6 +47,25 @@ class _ListScreenState extends State<ListScreen> {
     }
   }
 
+  // void _navigateToTaskDetail(String taskId) async {
+  //   final removedTaskId = await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => TaskDetailScreen(taskId: taskId, boardId: bỏa,),
+  //     ),
+  //   );
+
+  //   if (removedTaskId != null) {
+  //     // Xóa task khỏi danh sách
+  //     setState(() {
+  //       tasks.removeWhere((task) => task['id'] == removedTaskId);
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Đã xóa task: $removedTaskId')),
+  //     );
+  //   }
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,14 +186,35 @@ class _ListScreenState extends State<ListScreen> {
                                               final taskDetails =
                                                   await _apiTaskService
                                                       .getTaskById(task['_id']);
-                                              Navigator.push(
+
+                                              final removedTaskId =
+                                                  await Navigator.push(
                                                 context,
                                                 MaterialPageRoute(
                                                   builder: (context) =>
                                                       TaskDetailScreen(
-                                                          taskId: task['_id']),
+                                                    taskId: task['_id'],
+                                                    taskData:
+                                                        taskDetails, // Truyền dữ liệu task ở đây
+                                                    boardId:
+                                                        widget.board['_id'],
+                                                  ),
                                                 ),
                                               );
+                                              if (removedTaskId != null) {
+                                                // Xóa task khỏi danh sách
+                                                setState(() {
+                                                  _lists = _apiListService
+                                                      .getAllLists(
+                                                          widget.board['_id']);
+                                                });
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                      content:
+                                                          Text('Đã xóa task')),
+                                                );
+                                              }
                                             } catch (e) {
                                               ScaffoldMessenger.of(context)
                                                   .showSnackBar(

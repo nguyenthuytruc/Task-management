@@ -7,11 +7,12 @@ class ApiListService {
   // Lấy danh sách tất cả Lists
   Future<List<dynamic>> getAllLists(String boardId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/api/list/b/$boardId'));
+      final response =
+          await http.get(Uri.parse('$baseUrl/api/list/b/$boardId'));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
-        print('Response JSON: $json');  // In ra phản hồi để kiểm tra
+        print('Response JSON: $json'); // In ra phản hồi để kiểm tra
 
         // Kiểm tra xem có dữ liệu không
         if (json.containsKey('data') && json['data']['list'] != null) {
@@ -68,30 +69,29 @@ class ApiListService {
   }
 
   // Cập nhật List
-Future<Map<String, dynamic>> updateList(String id, Map<String, dynamic> data) async {
-  final response = await http.put(
-    Uri.parse('$baseUrl/api/list/$id'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode(data),
-  );
-  return jsonDecode(response.body);
-}
-
-  
+  Future<Map<String, dynamic>> updateList(
+      String id, Map<String, dynamic> data) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/api/list/$id'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(data),
+    );
+    return jsonDecode(response.body);
+  }
 
   // Xóa List
   Future<bool> deleteList(String id) async {
-  try {
-    final response = await http.delete(Uri.parse('$baseUrl/api/list/delete/$id'));
-    if (response.statusCode == 200) {
-      return true;
-    } else {
+    try {
+      final response =
+          await http.delete(Uri.parse('$baseUrl/api/list/delete/$id'));
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print('Error: $e');
       return false;
     }
-  } catch (e) {
-    print('Error: $e');
-    return false;
   }
-}
-
 }

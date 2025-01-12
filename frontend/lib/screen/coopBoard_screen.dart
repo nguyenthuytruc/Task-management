@@ -5,14 +5,14 @@ import 'package:frontend/screen/login_screen.dart';
 import 'package:frontend/screen/note_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class BoardScreen extends StatefulWidget {
+class CoopBoardScreen extends StatefulWidget {
   @override
-  _BoardScreenState createState() => _BoardScreenState();
+  _CoopBoardScreenState createState() => _CoopBoardScreenState();
 }
 
-class _BoardScreenState extends State<BoardScreen> {
+class _CoopBoardScreenState extends State<CoopBoardScreen> {
   final ApiBoardService _apiUserService = ApiBoardService();
-  Future<List<dynamic>>? _boards;
+  Future<List<dynamic>>? _boardCoop;
   String? _idUser;
 
   Future<String?> _getUserId() async {
@@ -25,7 +25,7 @@ class _BoardScreenState extends State<BoardScreen> {
     if (idUser != null) {
       setState(() {
         _idUser = idUser;
-        _boards = _apiUserService.getAllBoards(idUser);
+        _boardCoop = _apiUserService.getAllBoardsCoop(idUser);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +100,7 @@ class _BoardScreenState extends State<BoardScreen> {
                   );
                   Navigator.pop(context);
                   setState(() {
-                    _boards = _apiUserService.getAllBoards(_idUser ?? "");
+                    _boardCoop = _apiUserService.getAllBoards(_idUser ?? "");
                   });
                 } else {
                   throw Exception('Cập nhật board thất bại.');
@@ -169,7 +169,7 @@ class _BoardScreenState extends State<BoardScreen> {
                   );
                   Navigator.pop(context);
                   setState(() {
-                    _boards = _apiUserService.getAllBoards(_idUser ?? "");
+                    _boardCoop = _apiUserService.getAllBoards(_idUser ?? "");
                   });
                 } else {
                   throw Exception('Thêm thành viên thất bại.');
@@ -264,7 +264,7 @@ class _BoardScreenState extends State<BoardScreen> {
                   );
                   Navigator.pop(context);
                   setState(() {
-                    _boards = _apiUserService.getAllBoards(idUser);
+                    _boardCoop = _apiUserService.getAllBoards(idUser);
                   });
                 } else {
                   throw Exception('Tạo board thất bại');
@@ -294,7 +294,7 @@ class _BoardScreenState extends State<BoardScreen> {
           ),
         );
         setState(() {
-          _boards = _apiUserService.getAllBoards(_idUser ?? "");
+          _boardCoop = _apiUserService.getAllBoards(_idUser ?? "");
         });
       } else {
         throw Exception('Xóa board thất bại.');
@@ -326,15 +326,9 @@ class _BoardScreenState extends State<BoardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: [
-          IconButton(
-            onPressed: _addBoard,
-            icon: Icon(Icons.add),
-          ),
-        ],
         title: Center(
           child: Text(
-            "QTV",
+            "My Coop Board",
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -346,7 +340,7 @@ class _BoardScreenState extends State<BoardScreen> {
         backgroundColor: Colors.blue,
       ),
       body: FutureBuilder<List<dynamic>>(
-        future: _boards,
+        future: _boardCoop,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
@@ -407,50 +401,6 @@ class _BoardScreenState extends State<BoardScreen> {
                               );
                             }
                           },
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              _updateBoard(board['_id'], board['name'],
-                                  board['description']);
-                            } else if (value == 'delete') {
-                              _deleteBoard(board['_id']);
-                            } else if (value == 'addmember') {
-                              _addMember(board['_id']);
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit, color: Colors.blue),
-                                  SizedBox(width: 8),
-                                  Text('Chỉnh sửa'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Xóa'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'addmember',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.people, color: Colors.red),
-                                  SizedBox(width: 8),
-                                  Text('Thêm thành viên'),
-                                ],
-                              ),
-                            ),
-                          ],
                         ),
                       ],
                     ),

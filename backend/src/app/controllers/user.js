@@ -71,6 +71,16 @@ const uploadImage = async function (req, res) {
   });
 };
 
+const getListNoti = async function (req, res) {
+  const id = req?.params?.id ?? "";
+  if (id != "") {
+    const list = await userServices.getAllNotiByUserId(id);
+    res.status(200).json(new Result({ list: list }, "success", true));
+  } else {
+    res.status(400).json(new Result(null, "Not have id", false));
+  }
+};
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const testGemini = async function (req, res) {
@@ -90,6 +100,7 @@ export default {
   getById,
   getAll,
   getByEmail,
+  getListNoti,
   uploadImage,
   testGemini
 };

@@ -1,5 +1,7 @@
 import Task from "../entity/Task.js";
 import List from "../entity/List.js";
+import Noti from "../entity/Noti.js";
+import User from "../entity/User.js";
 const getById = async function (id) {
   try {
     const existsTask = await Task.findOne({ _id: id });
@@ -68,12 +70,19 @@ const create = async function ({
 // Cập nhật list theo id
 const updateById = async function (
   id,
-  { name, description, status, userId, listId }
+  { name, description, status, userId, listId, assignee }
 ) {
   try {
     const update = await Task.updateOne(
       { _id: id },
-      { name, description, status, userId, listId }
+      {
+        name,
+        description,
+        status,
+        permitted: userId,
+        listId,
+        assignee
+      }
     );
     if (update.matchedCount === 0) {
       console.log("No Task found with the provided ID.");
@@ -82,7 +91,17 @@ const updateById = async function (
     const updateTask = await Task.findById({
       _id: id
     });
+    const user = await User.findOne({ email: updateTask.assignee });
+    console.log(updateTask);
 
+    const newNoti = new Noti({
+      userId: user._id,
+      title: "Nhận task mới",
+      description: `Bạn đã được gán vào task ${updateTask.name}`
+    });
+    console.log("New Noti");
+
+    await newNoti.save();
     return updateTask;
   } catch (exception) {
     console.error("Error updating Task:", exception);
