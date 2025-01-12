@@ -467,6 +467,127 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     }
   }
 
+  // Di Chuyển task
+  void _updateTaskList(String taskId, String currentListId) async {
+    // Controller để lấy thông tin danh sách mới
+    String? selectedListId;
+
+    // Hàm gọi API để lấy các list từ server
+    Future<List<dynamic>> _getListsFromApi() async {
+      // Giả lập API gọi để lấy danh sách (thay đổi theo API thực tế)
+      await Future.delayed(Duration(seconds: 1)); // Giả lập thời gian chờ
+      return [
+        {'id': '1', 'name': 'List 1'},
+        {'id': '2', 'name': 'List 2'},
+        {'id': '3', 'name': 'List 3'},
+      ];
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Cập nhật danh sách cho task"),
+        content: FutureBuilder<List<dynamic>>(
+          future: _getListsFromApi(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text("Lỗi: ${snapshot.error}"));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text("Không có danh sách nào."));
+            } else {
+              var lists = [
+                {'id': '1', 'name': 'List 1'},
+                {'id': '2', 'name': 'List 2'},
+                {'id': '3', 'name': 'List 3'},
+              ];
+              ;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButton<String>(
+                    value: selectedListId ??
+                        currentListId, // Binding với list hiện tại
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedListId = newValue;
+                      });
+                    },
+                    items: lists.map<DropdownMenuItem<String>>((list) {
+                      return DropdownMenuItem<String>(
+                        value: list['id'],
+                        child: Text(list['name'] ?? "List 1"),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              );
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Hủy"),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (selectedListId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Vui lòng chọn một danh sách."),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                // Gọi API để cập nhật task vào list mới
+                // bool isUpdated = await _apiTaskService.updateTaskList(
+                //   taskId,
+                //   selectedListId!,
+                // );
+
+                bool isUpdated = true;
+
+                if (isUpdated) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Task đã được cập nhật vào danh sách mới.'),
+                      backgroundColor: Colors.blueAccent,
+                    ),
+                  );
+                  Navigator.pop(
+                      context); // Đóng dialog sau khi cập nhật thành công
+                  // setState(() {
+                  //   // Cập nhật lại dữ liệu sau khi cập nhật task
+                  //   _boards = _apiUserService.getAllBoards(_idUser ?? "");
+                  // });
+                } else {
+                  throw Exception('Cập nhật danh sách task thất bại.');
+                }
+              } catch (e) {
+                print(e.toString());
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      e.toString().split(":")[2] ??
+                          'Đã xảy ra lỗi không xác định.',
+                    ),
+                  ),
+                );
+              }
+            },
+            child: Text("Cập nhật"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -578,6 +699,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                     onPressed: () {
                                       // Xử lý di chuyển ở đây
                                       print("Di chuyển task");
+                                      print(taskData?['_id'] +
+                                          "-" +
+                                          taskData?['listId']);
+                                      _updateTaskList(taskData?['_id'],
+                                          taskData?['listId']);
                                     },
                                     child: Text(
                                       "Di chuyển",

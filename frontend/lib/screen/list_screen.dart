@@ -47,25 +47,6 @@ class _ListScreenState extends State<ListScreen> {
     }
   }
 
-  // void _navigateToTaskDetail(String taskId) async {
-  //   final removedTaskId = await Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => TaskDetailScreen(taskId: taskId, boardId: bỏa,),
-  //     ),
-  //   );
-
-  //   if (removedTaskId != null) {
-  //     // Xóa task khỏi danh sách
-  //     setState(() {
-  //       tasks.removeWhere((task) => task['id'] == removedTaskId);
-  //     });
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Đã xóa task: $removedTaskId')),
-  //     );
-  //   }
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
