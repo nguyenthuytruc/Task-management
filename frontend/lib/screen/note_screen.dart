@@ -107,13 +107,14 @@ class _NoteScreenState extends State<NoteScreen> {
 
                 // Tạo đối tượng Note
                 Note newNote = Note(
-                  id: '', // id có thể để trống nếu server tự sinh
+                  id: '',
                   name: noteName,
                   description: noteDescription,
                   createdAt: DateTime.now(),
                   updatedAt: DateTime.now(),
-                  createdBy: idUser, // idUser cần phải chắc chắn không phải null
+                  createdBy: idUser,
                   boardId: widget.boardId,
+                  isPinned: false, // Ghi chú mặc định không được ghim
                 );
 
                 try {
@@ -170,6 +171,36 @@ class _NoteScreenState extends State<NoteScreen> {
     }
   }
 
+void _pinUnpinNote(Note note) async {
+  // Đảo ngược trạng thái ghim
+  Note updatedNote = Note(
+    id: note.id,
+    name: note.name,
+    description: note.description,
+    type: note.type,
+    isPinned: !note.isPinned, // Đảo ngược trạng thái ghim
+    createdAt: note.createdAt,
+    updatedAt: DateTime.now(),
+    createdBy: note.createdBy,
+    boardId: note.boardId,
+  );
+
+  try {
+    bool isUpdated = await _apiNoteService.updateNote(updatedNote);
+    if (isUpdated) {
+      
+      setState(() {
+        // Làm mới danh sách và sắp xếp lại các ghi chú
+        _notes = _apiNoteService.getNotesByBoardId(widget.boardId);
+      });
+    } 
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Lỗi: ${e.toString()}')),
+    );
+  }
+}
+
   // Chỉnh sửa ghi chú
   void _editNote(Note note) async {
     TextEditingController nameController = TextEditingController(text: note.name);
@@ -222,7 +253,7 @@ class _NoteScreenState extends State<NoteScreen> {
                   name: noteName,
                   description: noteDescription,
                   type: note.type,
-                  isPinned: note.isPinned,
+                  isPinned: !note.isPinned,
                   createdAt: note.createdAt,
                   updatedAt: DateTime.now(), // Cập nhật thời gian sửa đổi
                   createdBy: note.createdBy,
@@ -288,6 +319,13 @@ class _NoteScreenState extends State<NoteScreen> {
             return Center(child: Text("Không có ghi chú nào."));
           } else {
             var notes = snapshot.data!;
+            // Sắp xếp ghi chú sao cho ghi chú đã ghim sẽ xuất hiện ở trên cùng
+          notes.sort((a, b) {
+            if (a.isPinned == b.isPinned) {
+              return 0;
+            }
+            return a.isPinned ? -1 : 1;
+          });
             return ListView.builder(
   itemCount: notes.length,
   itemBuilder: (context, index) {
@@ -335,7 +373,10 @@ class _NoteScreenState extends State<NoteScreen> {
                   );
                 },
               );
-            }
+              
+            } else if (value == 'pin') {
+                          _pinUnpinNote(note); // Ghim hoặc bỏ ghim ghi chú
+                        }
           },
           itemBuilder: (BuildContext context) => [
             PopupMenuItem(
@@ -358,6 +399,29 @@ class _NoteScreenState extends State<NoteScreen> {
                 ],
               ),
             ),
+            PopupMenuItem(
+  value: 'pin',
+  child: Row(
+    children: [
+      Icon(
+        note.isPinned 
+            ? Icons.push_pin // Sử dụng icon pin đẹp hơn
+            : Icons.pin_drop, // Icon này cho trạng thái chưa ghim
+        color: note.isPinned ? Colors.amber : Colors.grey, // Màu vàng cho ghim, màu xám cho không ghim
+        size: 24, // Kích thước icon
+      ),
+      SizedBox(width: 8),
+      Text(
+        note.isPinned ? 'Bỏ ghim' : 'Ghim',
+        style: TextStyle(
+          fontSize: 16,
+          color: note.isPinned ? Colors.amber : Colors.black, // Màu chữ
+        ),
+      ),
+    ],
+  ),
+)
+
           ],
         ),
       ),
