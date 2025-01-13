@@ -469,124 +469,149 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   // Di Chuyển task
   void _updateTaskList(String taskId, String currentListId) async {
-    // Controller để lấy thông tin danh sách mới
-    String? selectedListId;
+  // Biến lưu giá trị đã chọn
+  String? selectedBoardId;
+  String? selectedListId;
 
-    // Hàm gọi API để lấy các list từ server
-    Future<List<dynamic>> _getListsFromApi() async {
-      // Giả lập API gọi để lấy danh sách (thay đổi theo API thực tế)
-      await Future.delayed(Duration(seconds: 1)); // Giả lập thời gian chờ
-      return [
-        {'id': '1', 'name': 'List 1'},
-        {'id': '2', 'name': 'List 2'},
-        {'id': '3', 'name': 'List 3'},
-      ];
-    }
+  // Lấy danh sách Boards từ API
+  Future<List<Map<String, String>>> _getBoardsFromApi() async {
+    await Future.delayed(Duration(seconds: 1));
+    return [
+      {'id': '1', 'name': 'Board 1'},
+      {'id': '2', 'name': 'Board 2'},
+      {'id': '3', 'name': 'Board 3'},
+    ];
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Cập nhật danh sách cho task"),
-        content: FutureBuilder<List<dynamic>>(
-          future: _getListsFromApi(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text("Lỗi: ${snapshot.error}"));
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text("Không có danh sách nào."));
-            } else {
-              var lists = [
-                {'id': '1', 'name': 'List 1'},
-                {'id': '2', 'name': 'List 2'},
-                {'id': '3', 'name': 'List 3'},
-              ];
-              ;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButton<String>(
-                    value: selectedListId ??
-                        currentListId, // Binding với list hiện tại
+  // Lấy danh sách Lists từ API dựa trên BoardId
+  Future<List<Map<String, String>>> _getListsFromApi(String boardId) async {
+    await Future.delayed(Duration(seconds: 1));
+    return [
+      {'id': '1', 'name': 'List A', 'boardId': '1'},
+      {'id': '2', 'name': 'List B', 'boardId': '2'},
+      {'id': '3', 'name': 'List C', 'boardId': '3'},
+    ].where((list) => list['boardId'] == boardId).toList();
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) {
+        return AlertDialog(
+          title: Text("Cập nhật danh sách cho Task"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<Map<String, String>>>(
+                future: _getBoardsFromApi(),
+                builder: (context, boardSnapshot) {
+                  if (boardSnapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (boardSnapshot.hasError) {
+                    return Text("Lỗi: ${boardSnapshot.error}");
+                  } else if (!boardSnapshot.hasData || boardSnapshot.data!.isEmpty) {
+                    return Text("Không có Board nào.");
+                  }
+                  return DropdownButton<String>(
+                    isExpanded: true,
+                    value: selectedBoardId,
+                    hint: Text("Chọn Board"),
                     onChanged: (String? newValue) {
                       setState(() {
-                        selectedListId = newValue;
+                        selectedBoardId = newValue;
+                        selectedListId = null; // Reset danh sách List khi chọn Board mới
                       });
                     },
-                    items: lists.map<DropdownMenuItem<String>>((list) {
+                    items: boardSnapshot.data!.map((board) {
                       return DropdownMenuItem<String>(
-                        value: list['id'],
-                        child: Text(list['name'] ?? "List 1"),
+                        value: board['id'],
+                        child: Text(board['name']!),
                       );
                     }).toList(),
-                  ),
-                ],
-              );
-            }
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Hủy"),
+                  );
+                },
+              ),
+              if (selectedBoardId != null)
+                FutureBuilder<List<Map<String, String>>>(
+                  future: _getListsFromApi(selectedBoardId!),
+                  builder: (context, listSnapshot) {
+                    if (listSnapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (listSnapshot.hasError) {
+                      return Text("Lỗi: ${listSnapshot.error}");
+                    } else if (!listSnapshot.hasData || listSnapshot.data!.isEmpty) {
+                      return Text("Không có danh sách nào.");
+                    }
+                    return DropdownButton<String>(
+                      isExpanded: true,
+                      value: selectedListId,
+                      hint: Text("Chọn List"),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedListId = newValue;
+                        });
+                      },
+                      items: listSnapshot.data!.map((list) {
+                        return DropdownMenuItem<String>(
+                          value: list['id'],
+                          child: Text(list['name']!),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+            ],
           ),
-          TextButton(
-            onPressed: () async {
-              if (selectedListId == null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("Vui lòng chọn một danh sách."),
-                    backgroundColor: Colors.blueAccent,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                // Gọi API để cập nhật task vào list mới
-                // bool isUpdated = await _apiTaskService.updateTaskList(
-                //   taskId,
-                //   selectedListId!,
-                // );
-
-                bool isUpdated = true;
-
-                if (isUpdated) {
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Hủy"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (selectedListId == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Task đã được cập nhật vào danh sách mới.'),
-                      backgroundColor: Colors.blueAccent,
+                      content: Text("Vui lòng chọn một danh sách."),
+                      backgroundColor: Colors.redAccent,
                     ),
                   );
-                  Navigator.pop(
-                      context); // Đóng dialog sau khi cập nhật thành công
-                  // setState(() {
-                  //   // Cập nhật lại dữ liệu sau khi cập nhật task
-                  //   _boards = _apiUserService.getAllBoards(_idUser ?? "");
-                  // });
-                } else {
-                  throw Exception('Cập nhật danh sách task thất bại.');
+                  return;
                 }
-              } catch (e) {
-                print(e.toString());
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      e.toString().split(":")[2] ??
-                          'Đã xảy ra lỗi không xác định.',
+
+                try {
+                  // Giả lập gọi API cập nhật danh sách
+                  bool isUpdated = true;
+
+                  if (isUpdated) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Task đã được cập nhật."),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  } else {
+                    throw Exception("Cập nhật danh sách thất bại.");
+                  }
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
                     ),
-                  ),
-                );
-              }
-            },
-            child: Text("Cập nhật"),
-          ),
-        ],
-      ),
-    );
-  }
+                  );
+                }
+              },
+              child: Text("Cập nhật"),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
