@@ -140,6 +140,20 @@ const registerEmail = async function (req, res) {
     });
   }
 };
+
+const moveTask = async function (req, res) {
+  const taskId = req.params?.id;
+  const nextListId = req.body.nextListId;
+
+  const move = await taskServices.moveTask(taskId, nextListId);
+  if (move) {
+    res.status(200).json(new Result({}, "Updated", true));
+  } else {
+    res.status(400).json(new Result({}, "Updated Failed", false));
+  }
+  console.log(taskId, nextListId);
+};
+
 export default {
   getAll,
   getAllByIdList,
@@ -147,5 +161,6 @@ export default {
   create,
   updateById,
   deleteById,
-  registerEmail
+  registerEmail,
+  moveTask
 };

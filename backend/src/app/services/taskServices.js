@@ -162,6 +162,49 @@ const registerEmail = async function (taskId, emails) {
     throw error;
   }
 };
+
+const moveTask = async function (idTask, idNextList) {
+  try {
+    // Tìm task hiện tại bằng idTask
+    const task = await Task.findById(idTask);
+    if (!task) {
+      throw new Error("Task not found");
+    }
+
+    // Lấy List cũ từ idList trong Task
+    const currentList = await List.findById(task.listId);
+    if (!currentList) {
+      throw new Error("Current List not found");
+    }
+
+    // Lấy List mới từ idNextList
+    const nextList = await List.findById(idNextList);
+    if (!nextList) {
+      throw new Error("Next List not found");
+    }
+
+    // Xóa idTask khỏi mảng task[] trong List cũ
+    currentList.tasks = currentList.tasks.filter(
+      (taskId) => taskId.toString() !== idTask
+    );
+    await currentList.save();
+
+    // Thêm idTask vào mảng task[] trong List mới
+    nextList.tasks.push(idTask);
+    await nextList.save();
+
+    // Cập nhật idList của Task
+    task.listId = idNextList;
+    await task.save();
+
+    return true;
+  } catch (error) {
+    console.log(error);
+
+    return false;
+  }
+};
+
 export default {
   getAll,
   getById,
@@ -169,5 +212,6 @@ export default {
   create,
   updateById,
   deleteById,
-  registerEmail
+  registerEmail,
+  moveTask
 };

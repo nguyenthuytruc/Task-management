@@ -34,6 +34,15 @@ const getAllNotiByUserId = async function (userId) {
   return listNoti ?? null;
 };
 
+const deleteNotiById = async function (notiId) {
+  try {
+    const deletedNoti = await Noti.findByIdAndDelete(notiId); // Xóa thông báo theo ID
+    return deletedNoti ?? null; // Trả về thông báo đã xóa hoặc null nếu không tìm thấy
+  } catch (error) {
+    throw new Error("Failed to delete notification");
+  }
+};
+
 const login = async function ({ email, password }) {
   try {
     const userExists = await User.findOne({
@@ -98,5 +107,6 @@ export default {
   getAll,
   register,
   login,
-  getAllNotiByUserId
+  getAllNotiByUserId,
+  deleteNotiById
 };

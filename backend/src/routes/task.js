@@ -17,4 +17,7 @@ router.put("/:id", TaskController.updateById);
 router.delete("/delete/:id", TaskController.deleteById);
 //
 router.post("/register/:id", TaskController.registerEmail);
+
+router.post("/move/:id", TaskController.moveTask);
+
 export default router;

@@ -129,10 +129,30 @@ const deleteById = async function (id) {
     return false;
   }
 };
+
+const getArrListByIdTask = async function (idList) {
+  try {
+    // Step 2: Get the List by ListId from the Task
+    const list = await List.findById(idList);
+    if (!list) {
+      throw new Error("List not found");
+    }
+
+    const boardLists = await List.find({ boardId: list.boardId });
+
+    // Step 4: Return the List of Lists in the Board
+    return boardLists;
+  } catch (exception) {
+    console.error("Error:", exception.message);
+    return null;
+  }
+};
+
 export default {
   getAll,
   getById,
   getAllByIdBoard,
+  getArrListByIdTask,
   create,
   updateById,
   deleteById

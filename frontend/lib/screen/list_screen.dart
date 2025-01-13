@@ -183,18 +183,42 @@ class _ListScreenState extends State<ListScreen> {
                                                 ),
                                               );
                                               if (removedTaskId != null) {
-                                                // Xóa task khỏi danh sách
-                                                setState(() {
-                                                  _lists = _apiListService
-                                                      .getAllLists(
-                                                          widget.board['_id']);
-                                                });
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  SnackBar(
-                                                      content:
-                                                          Text('Đã xóa task')),
-                                                );
+                                                switch (removedTaskId) {
+                                                  case 1:
+                                                    {
+                                                      // Xóa task khỏi danh sách
+                                                      setState(() {
+                                                        _lists = _apiListService
+                                                            .getAllLists(widget
+                                                                .board['_id']);
+                                                      });
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        SnackBar(
+                                                            content: Text(
+                                                                'Đã cập nhật task')),
+                                                      );
+                                                      break;
+                                                    }
+                                                  case -1:
+                                                    {
+                                                      // Xóa task khỏi danh sách
+                                                      setState(() {
+                                                        _lists = _apiListService
+                                                            .getAllLists(widget
+                                                                .board['_id']);
+                                                      });
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        SnackBar(
+                                                            content: Text(
+                                                                'Đã xóa task')),
+                                                      );
+                                                      break;
+                                                    }
+                                                }
                                               }
                                             } catch (e) {
                                               ScaffoldMessenger.of(context)

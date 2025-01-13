@@ -111,9 +111,18 @@ const deleteById = async function (req, res) {
   }
 };
 
+const getArrListByIdList = async function (req, res) {
+  const arrList = await listServices.getArrListByIdTask(req.params?.idList);
+  res.status(200).json({
+    message: "Delete successful",
+    data: arrList
+  });
+};
+
 export default {
   getAll,
   getAllByIdBoard,
+  getArrListByIdList,
   getById,
   create,
   updateById,

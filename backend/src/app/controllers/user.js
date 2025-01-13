@@ -81,6 +81,42 @@ const getListNoti = async function (req, res) {
   }
 };
 
+const deleteNotiById = async function (req, res) {
+  const id = req?.params?.id ?? "";
+  if (id !== "") {
+    try {
+      // Gọi service để xóa thông báo theo ID
+      const result = await userServices.deleteNotiById(id);
+
+      if (result) {
+        // Thành công
+        res
+          .status(200)
+          .json(new Result(null, "Notification deleted successfully", true));
+      } else {
+        // Thông báo không tồn tại
+        res.status(404).json(new Result(null, "Notification not found", false));
+      }
+    } catch (error) {
+      // Xử lý lỗi
+      res
+        .status(500)
+        .json(
+          new Result(
+            null,
+            `Error deleting notification: ${error.message}`,
+            false
+          )
+        );
+    }
+  } else {
+    // Trường hợp không có ID
+    res
+      .status(400)
+      .json(new Result(null, "Notification ID is required", false));
+  }
+};
+
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const testGemini = async function (req, res) {
@@ -102,5 +138,6 @@ export default {
   getByEmail,
   getListNoti,
   uploadImage,
-  testGemini
+  testGemini,
+  deleteNotiById
 };

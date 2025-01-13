@@ -7,6 +7,9 @@ const router = express.Router();
 router.get("/b/:idBoard", ListController.getAllByIdBoard);
 // CHECKED
 router.get("/:id", ListController.getById);
+
+router.get("/arr-list/:idList", ListController.getArrListByIdList);
+
 // CHECKED
 router.put("/:id", ListController.updateById);
 // CHECKED

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/api_userService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class BadgeScreen extends StatefulWidget {
   @override
@@ -27,12 +28,13 @@ class _BadgeScreenState extends State<BadgeScreen> {
     }
   }
 
-Future<void> _markAsRead(int index) async {
+  Future<void> _markAsRead(int index) async {
     final prefs = await SharedPreferences.getInstance();
     List<String>? readNotiIds = prefs.getStringList('readNotiIds') ?? [];
     final notifications = await _noti;
 
-    if (notifications != null && !readNotiIds.contains(notifications[index]['id'])) {
+    if (notifications != null &&
+        !readNotiIds.contains(notifications[index]['id'])) {
       readNotiIds.add(notifications[index]['id'].toString());
       await prefs.setStringList('readNotiIds', readNotiIds);
 
@@ -42,36 +44,46 @@ Future<void> _markAsRead(int index) async {
     }
   }
 
-  Future<void> _deleteNotification(int index) async {
+  Future<void> _deleteNotification(String id, int index) async {
     final prefs = await SharedPreferences.getInstance();
-    List<String>? deletedNotiIds = prefs.getStringList('deletedNotiIds') ?? [];
-    final notifications = await _noti;
+    List<String> notifications = prefs.getStringList("notifications") ?? [];
+    print(id);
+    try {
+      // Gọi API để xóa thông báo
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:3000/api/users/noti/delete/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
 
-    if (notifications != null && !deletedNotiIds.contains(notifications[index]['id'])) {
-      deletedNotiIds.add(notifications[index]['id'].toString());  // Thêm ID thông báo đã xóa
-      await prefs.setStringList('deletedNotiIds', deletedNotiIds);
-
-      setState(() {
-        notifications.removeAt(index);  // Xóa thông báo khỏi danh sách hiển thị
-      });
+      if (response.statusCode == 200) {
+        _loadNotifications();
+      } else {
+        throw Exception('Failed to delete notification');
+      }
+    } catch (error) {
+      // Hiển thị lỗi nếu không xóa được thông báo
+      print('$error');
     }
   }
 
-Future<void> _loadNotifications() async {
+  Future<void> _loadNotifications() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     try {
-      final apiNotifications = await userService.getNoti();  // Gọi API lấy danh sách thông báo
+      final apiNotifications =
+          await userService.getNoti(); // Gọi API lấy danh sách thông báo
       if (apiNotifications != null) {
         setState(() {
           for (var notification in apiNotifications) {
-            notification['isRead'] = false;  // Gán mặc định là chưa đọc
-            notification['isDeleted'] = false;  // Gán mặc định là chưa xóa
+            notification['isRead'] = false; // Gán mặc định là chưa đọc
           }
         });
-        
+
         // Cập nhật SharedPreferences với danh sách thông báo từ API
-        await prefs.setStringList('notifications', apiNotifications.map((n) => n.toString()).toList());
+        await prefs.setStringList('notifications',
+            apiNotifications.map((n) => n.toString()).toList());
       }
     } catch (e) {
       print("Lỗi khi lấy thông báo từ API: $e");
@@ -81,8 +93,8 @@ Future<void> _loadNotifications() async {
   @override
   void initState() {
     super.initState();
-    _loadUserId();  // Lấy idUser
-    _loadNotifications();  // Tải thông báo và đồng bộ trạng thái đã đọc/xóa từ SharedPreferences
+    _loadUserId(); // Lấy idUser
+    _loadNotifications(); // Tải thông báo và đồng bộ trạng thái đã đọc/xóa từ SharedPreferences
   }
 
   @override
@@ -111,7 +123,8 @@ Future<void> _loadNotifications() async {
                 final isRead = noti['isRead'] ?? false;
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8.0, horizontal: 16.0),
                   child: Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -135,7 +148,7 @@ Future<void> _loadNotifications() async {
                           if (value == 'read') {
                             _markAsRead(index);
                           } else if (value == 'delete') {
-                            _deleteNotification(index);
+                            _deleteNotification(noti["_id"], index);
                           }
                         },
                         icon: Icon(

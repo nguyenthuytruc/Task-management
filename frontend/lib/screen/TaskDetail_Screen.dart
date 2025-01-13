@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:frontend/models/api_ListService.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -285,7 +286,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       );
 
       if (response.statusCode == 200) {
-        Navigator.pop(context, widget.taskId); // Quay lại màn hình trước đó
+        Navigator.pop(context, -1); // Quay lại màn hình trước đó
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể xóa task: ${response.statusCode}')),
@@ -469,78 +470,62 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   // Di Chuyển task
   void _updateTaskList(String taskId, String currentListId) async {
-  // Biến lưu giá trị đã chọn
-  String? selectedBoardId;
-  String? selectedListId;
+    // Biến lưu giá trị đã chọn
+    String? selectedListId;
 
-  // Lấy danh sách Boards từ API
-  Future<List<Map<String, String>>> _getBoardsFromApi() async {
-    await Future.delayed(Duration(seconds: 1));
-    return [
-      {'id': '1', 'name': 'Board 1'},
-      {'id': '2', 'name': 'Board 2'},
-      {'id': '3', 'name': 'Board 3'},
-    ];
-  }
+    final ApiListService _apiListService = ApiListService();
+    // Lấy danh sách Lists từ API dựa trên BoardId
+    Future<List<dynamic>> _getListsFromApi(String listId) {
+      return _apiListService.getArrLists(listId);
+    }
 
-  // Lấy danh sách Lists từ API dựa trên BoardId
-  Future<List<Map<String, String>>> _getListsFromApi(String boardId) async {
-    await Future.delayed(Duration(seconds: 1));
-    return [
-      {'id': '1', 'name': 'List A', 'boardId': '1'},
-      {'id': '2', 'name': 'List B', 'boardId': '2'},
-      {'id': '3', 'name': 'List C', 'boardId': '3'},
-    ].where((list) => list['boardId'] == boardId).toList();
-  }
+    Future<bool> moveTask() async {
+      try {
+        final response = await http.post(
+          Uri.parse('http://10.0.2.2:3000/api/task/move/${widget.taskId}'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'nextListId': selectedListId,
+          }),
+        );
 
-  showDialog(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) {
-        return AlertDialog(
-          title: Text("Cập nhật danh sách cho Task"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FutureBuilder<List<Map<String, String>>>(
-                future: _getBoardsFromApi(),
-                builder: (context, boardSnapshot) {
-                  if (boardSnapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator());
-                  } else if (boardSnapshot.hasError) {
-                    return Text("Lỗi: ${boardSnapshot.error}");
-                  } else if (!boardSnapshot.hasData || boardSnapshot.data!.isEmpty) {
-                    return Text("Không có Board nào.");
-                  }
-                  return DropdownButton<String>(
-                    isExpanded: true,
-                    value: selectedBoardId,
-                    hint: Text("Chọn Board"),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedBoardId = newValue;
-                        selectedListId = null; // Reset danh sách List khi chọn Board mới
-                      });
-                    },
-                    items: boardSnapshot.data!.map((board) {
-                      return DropdownMenuItem<String>(
-                        value: board['id'],
-                        child: Text(board['name']!),
-                      );
-                    }).toList(),
-                  );
-                },
-              ),
-              if (selectedBoardId != null)
-                FutureBuilder<List<Map<String, String>>>(
-                  future: _getListsFromApi(selectedBoardId!),
+        if (response.statusCode == 200) {
+          Navigator.pop(context);
+          return true; // Quay lại màn hình trước đó
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Không thể updated task')),
+          );
+          return false;
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi xóa task: $e')),
+        );
+        return false;
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text("Cập nhật danh sách cho Task"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FutureBuilder<List<dynamic>>(
+                  future: _getListsFromApi(taskData?['listId']),
                   builder: (context, listSnapshot) {
-                    if (listSnapshot.connectionState == ConnectionState.waiting) {
+                    if (listSnapshot.connectionState ==
+                        ConnectionState.waiting) {
                       return Center(child: CircularProgressIndicator());
                     } else if (listSnapshot.hasError) {
                       return Text("Lỗi: ${listSnapshot.error}");
-                    } else if (!listSnapshot.hasData || listSnapshot.data!.isEmpty) {
-                      return Text("Không có danh sách nào.");
+                    } else if (!listSnapshot.hasData ||
+                        listSnapshot.data!.isEmpty) {
+                      return Text("Không có Board nào.");
                     }
                     return DropdownButton<String>(
                       isExpanded: true,
@@ -553,65 +538,64 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       },
                       items: listSnapshot.data!.map((list) {
                         return DropdownMenuItem<String>(
-                          value: list['id'],
-                          child: Text(list['name']!),
+                          value: list['_id'].toString(),
+                          child: Text(list['name']),
                         );
                       }).toList(),
                     );
                   },
                 ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Hủy"),
+              ],
             ),
-            TextButton(
-              onPressed: () async {
-                if (selectedListId == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Vui lòng chọn một danh sách."),
-                      backgroundColor: Colors.redAccent,
-                    ),
-                  );
-                  return;
-                }
-
-                try {
-                  // Giả lập gọi API cập nhật danh sách
-                  bool isUpdated = true;
-
-                  if (isUpdated) {
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text("Hủy"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (selectedListId == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text("Task đã được cập nhật."),
-                        backgroundColor: Colors.green,
+                        content: Text("Vui lòng chọn một danh sách."),
+                        backgroundColor: Colors.redAccent,
                       ),
                     );
-                    Navigator.pop(context);
-                  } else {
-                    throw Exception("Cập nhật danh sách thất bại.");
+                    return;
                   }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(e.toString()),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              child: Text("Cập nhật"),
-            ),
-          ],
-        );
-      },
-    ),
-  );
-}
 
+                  try {
+                    // Giả lập gọi API cập nhật danh sách
+                    bool isUpdated = await moveTask();
+                    print(isUpdated);
+                    if (isUpdated) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Task đã được cập nhật."),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      Navigator.pop(context, 1);
+                    } else {
+                      throw Exception("Cập nhật danh sách thất bại.");
+                    }
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.toString()),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: Text("Cập nhật"),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -722,11 +706,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      // Xử lý di chuyển ở đây
-                                      print("Di chuyển task");
-                                      print(taskData?['_id'] +
-                                          "-" +
-                                          taskData?['listId']);
                                       _updateTaskList(taskData?['_id'],
                                           taskData?['listId']);
                                     },

@@ -94,4 +94,36 @@ class ApiListService {
       return false;
     }
   }
+
+  // Get Arr List
+  // Lấy danh sách tất cả Lists
+  Future<List<dynamic>> getArrLists(String listId) async {
+    try {
+      final response =
+          await http.get(Uri.parse('$baseUrl/api/list/arr-list/$listId'));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> json = jsonDecode(response.body);
+        print('Response JSON: $json'); // In ra phản hồi để kiểm tra
+
+        // Kiểm tra xem có dữ liệu không
+        if (json.containsKey('data') && json['data'] != null) {
+          List<dynamic> list = json['data'] as List<dynamic>;
+
+          // Nếu danh sách trống, thông báo không có dữ liệu
+          if (list.isEmpty) {
+            return Future.error('Không có danh sách nào trong board.');
+          } else {
+            return list;
+          }
+        } else {
+          return Future.error('Không tìm thấy dữ liệu trong phản hồi.');
+        }
+      } else {
+        return Future.error('Không thể tải danh sách: ${response.statusCode}');
+      }
+    } catch (e) {
+      return Future.error('Lỗi: $e');
+    }
+  }
 }
