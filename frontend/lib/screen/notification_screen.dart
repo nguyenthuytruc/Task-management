@@ -8,31 +8,81 @@ class BadgeScreen extends StatefulWidget {
 }
 
 class _BadgeScreenState extends State<BadgeScreen> {
-  final userService = UserService(); // Gọi service
-  Future<List<dynamic>>? _noti; // Danh sách thông báo
-  String? _idUser; // ID người dùng
+  final userService = UserService();
+  Future<List<dynamic>>? _noti;
+  String? _idUser;
 
-  // Lấy userId từ SharedPreferences
   Future<String?> _getUserId() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('idUser');
   }
 
-  // Load userId và danh sách thông báo
   Future<void> _loadUserId() async {
     final String? idUser = await _getUserId();
     if (idUser != null) {
       setState(() {
         _idUser = idUser;
-        _noti = userService.getNoti(); // Gọi API lấy danh sách thông báo
+        _noti = userService.getNoti();
       });
+    }
+  }
+
+Future<void> _markAsRead(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? readNotiIds = prefs.getStringList('readNotiIds') ?? [];
+    final notifications = await _noti;
+
+    if (notifications != null && !readNotiIds.contains(notifications[index]['id'])) {
+      readNotiIds.add(notifications[index]['id'].toString());
+      await prefs.setStringList('readNotiIds', readNotiIds);
+
+      setState(() {
+        notifications[index]['isRead'] = true;
+      });
+    }
+  }
+
+  Future<void> _deleteNotification(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    List<String>? deletedNotiIds = prefs.getStringList('deletedNotiIds') ?? [];
+    final notifications = await _noti;
+
+    if (notifications != null && !deletedNotiIds.contains(notifications[index]['id'])) {
+      deletedNotiIds.add(notifications[index]['id'].toString());  // Thêm ID thông báo đã xóa
+      await prefs.setStringList('deletedNotiIds', deletedNotiIds);
+
+      setState(() {
+        notifications.removeAt(index);  // Xóa thông báo khỏi danh sách hiển thị
+      });
+    }
+  }
+
+Future<void> _loadNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    try {
+      final apiNotifications = await userService.getNoti();  // Gọi API lấy danh sách thông báo
+      if (apiNotifications != null) {
+        setState(() {
+          for (var notification in apiNotifications) {
+            notification['isRead'] = false;  // Gán mặc định là chưa đọc
+            notification['isDeleted'] = false;  // Gán mặc định là chưa xóa
+          }
+        });
+        
+        // Cập nhật SharedPreferences với danh sách thông báo từ API
+        await prefs.setStringList('notifications', apiNotifications.map((n) => n.toString()).toList());
+      }
+    } catch (e) {
+      print("Lỗi khi lấy thông báo từ API: $e");
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _loadUserId();
+    _loadUserId();  // Lấy idUser
+    _loadNotifications();  // Tải thông báo và đồng bộ trạng thái đã đọc/xóa từ SharedPreferences
   }
 
   @override
@@ -47,12 +97,9 @@ class _BadgeScreenState extends State<BadgeScreen> {
         future: _noti,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-                child: CircularProgressIndicator()); // Hiển thị khi đang tải
+            return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Lỗi: ${snapshot.error}'),
-            );
+            return Center(child: Text('Lỗi: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('Không có thông báo nào.'));
           } else {
@@ -61,26 +108,50 @@ class _BadgeScreenState extends State<BadgeScreen> {
               itemCount: notifications.length,
               itemBuilder: (context, index) {
                 final noti = notifications[index];
+                final isRead = noti['isRead'] ?? false;
+
                 return Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8.0, horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                   child: Card(
-                    elevation: 4, // Đổ bóng cho card
+                    elevation: 4,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12), // Bo góc
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: ListTile(
                       title: Text(
-                        noti['title'] ?? 'No Title', // Tiêu đề thông báo
+                        noti['title'] ?? 'No Title',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
+                          color: isRead ? Colors.grey : Colors.black,
                         ),
                       ),
                       subtitle: Text(
-                        noti['description'] ??
-                            'No Description', // Mô tả thông báo
+                        noti['description'] ?? 'No Description',
                         style: TextStyle(fontSize: 14),
+                      ),
+                      trailing: PopupMenuButton(
+                        onSelected: (value) {
+                          if (value == 'read') {
+                            _markAsRead(index);
+                          } else if (value == 'delete') {
+                            _deleteNotification(index);
+                          }
+                        },
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: isRead ? Colors.green : Colors.grey,
+                        ),
+                        itemBuilder: (BuildContext context) => [
+                          PopupMenuItem(
+                            value: 'read',
+                            child: Text('Đánh dấu đã đọc'),
+                          ),
+                          PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Xóa'),
+                          ),
+                        ],
                       ),
                     ),
                   ),
