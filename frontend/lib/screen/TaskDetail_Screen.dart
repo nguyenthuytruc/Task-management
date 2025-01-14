@@ -255,7 +255,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     });
                     Navigator.pop(context);
                     Navigator.pop(context, 1);
-
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

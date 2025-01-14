@@ -248,7 +248,7 @@ class _BoardScreenState extends State<BoardScreen> {
                 'description': boardDescription,
                 'status': false,
                 'owner': idUser,
-                'members': [idUser],
+                'members': [],
                 'lists': [],
               };
 

@@ -1,4 +1,6 @@
 import boardServices from "../services/boardServices.js";
+import userServices from "../services/userServices.js";
+
 import Result from "../common/Result.js";
 import mongoose from "mongoose";
 
@@ -210,9 +212,8 @@ const getMembersByBoardId = async (req, res) => {
 
     // Lấy danh sách members
     const members = board.members || [];
-
-    console.log("board:", board);
-    console.log("members:", members);
+    const user = await userServices.getById(board.owner);
+    members.push(user.email);
 
     return res.status(200).json({ members });
   } catch (error) {

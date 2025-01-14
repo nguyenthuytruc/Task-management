@@ -58,7 +58,9 @@ class _BadgeScreenState extends State<BadgeScreen> {
       );
 
       if (response.statusCode == 200) {
-        _loadNotifications();
+        setState(() {
+          _noti = userService.getNoti();
+        });
       } else {
         throw Exception('Failed to delete notification');
       }

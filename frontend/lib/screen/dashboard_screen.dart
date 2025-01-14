@@ -77,12 +77,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.add_card),
             label: 'Bảng',
           ),
           const BottomNavigationBarItem(
             icon: Icon(Icons.ac_unit),
-            label: '...',
+            label: 'Bảng khách',
           ),
           BottomNavigationBarItem(
             icon: badges.Badge(
