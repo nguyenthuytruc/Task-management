@@ -254,6 +254,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       taskData?['description'] = updatedDescription;
                     });
                     Navigator.pop(context);
+                    Navigator.pop(context, 1);
+
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

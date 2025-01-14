@@ -91,17 +91,19 @@ const updateById = async function (
     const updateTask = await Task.findById({
       _id: id
     });
-    const user = await User.findOne({ email: updateTask.assignee });
-    console.log(updateTask);
+    
+    if (updateTask.assignee) {
+      const user = await User.findOne({ email: updateTask.assignee });
+      console.log(updateTask);
+      const newNoti = new Noti({
+        userId: user._id,
+        title: "Nhận task mới",
+        description: `Bạn đã được gán vào task ${updateTask.name}`
+      });
+      await newNoti.save();
 
-    const newNoti = new Noti({
-      userId: user._id,
-      title: "Nhận task mới",
-      description: `Bạn đã được gán vào task ${updateTask.name}`
-    });
-    console.log("New Noti");
+    }
 
-    await newNoti.save();
     return updateTask;
   } catch (exception) {
     console.error("Error updating Task:", exception);

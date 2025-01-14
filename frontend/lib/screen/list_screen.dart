@@ -79,6 +79,7 @@ class _ListScreenState extends State<ListScreen> {
                     elevation: 3,
                     child: Padding(
                       padding: EdgeInsets.all(10),
+                      child: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -245,6 +246,7 @@ class _ListScreenState extends State<ListScreen> {
                           ),
                         ],
                       ),
+                    )
                     ),
                   ),
                 );
